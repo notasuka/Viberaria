@@ -1,0 +1,71 @@
+Configs: {
+	tConfig: {
+		DisplayName: t Config
+		Headers.ViberariaConfig: Viberaria Config Header
+
+		ViberariaEnabled: {
+			Label: Viberaria Enabled
+			Tooltip: ""
+		}
+
+		MaxIntensity: {
+			Label: Max Intensity
+			Tooltip: ""
+		}
+
+		MinIntensity: {
+			Label: Min Intensity
+			Tooltip: ""
+		}
+	}
+
+	ViberariaConfig: {
+		DisplayName: Viberaria Config
+
+		Headers: {
+			Toggles: Toggles Header
+			Intensities: Intensities Header
+			HP: H P Header
+		}
+
+		ViberariaEnabled: {
+			Label: Viberaria Enabled
+			Tooltip: ""
+		}
+
+		MinIntensity: {
+			Label: Min Intensity
+			Tooltip: ""
+		}
+
+		MaxIntensity: {
+			Label: Max Intensity
+			Tooltip: ""
+		}
+
+		HealthVibratationScalingEnabled: {
+			Label: Health Vibratation Scaling Enabled
+			Tooltip: ""
+		}
+
+		DamageVibrationEnabled: {
+			Label: Damage Vibration Enabled
+			Tooltip: ""
+		}
+
+		PotionUseVibrationEnabled: {
+			Label: Potion Use Vibration Enabled
+			Tooltip: ""
+		}
+
+		EffectDamageVibrationEnabled: {
+			Label: Effect Damage Vibration Enabled
+			Tooltip: ""
+		}
+
+		RespawnTimerVibrationEnabled: {
+			Label: Respawn Timer Vibration Enabled
+			Tooltip: ""
+		}
+	}
+}

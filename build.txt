@@ -1,4 +1,4 @@
 displayName = Viberaria
 author = Asuka
-version = 0.2
+version = 0.9
 dllReferences = Buttplug,Buttplug.Client.Connectors.WebsocketConnector,Newtonsoft.Json,deniszykov.WebSocketListener,System.Threading.Tasks,System.Threading.Channels,System.Threading.Tasks.Dataflow

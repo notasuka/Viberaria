@@ -30,7 +30,7 @@ public class ViberariaConfig : ModConfig
     #region Intensities Configurations
     [Header("HP")]
     
-    [Range(0.2f,1f)] [Increment(0.01f)] [DefaultValue(1f)] public float MaxIntensity { get; set; }
-    [Range(0.1f,0.9f)] [Increment(0.01f)] [DefaultValue(0.2f)] public float MinIntensity { get; set; }
+    [Range(0.1f,1f)] [Increment(0.01f)] [DefaultValue(1f)] public float MaxIntensity { get; set; }
+    [Range(0.05f,0.95f)] [Increment(0.01f)] [DefaultValue(0.2f)] public float MinIntensity { get; set; }
     #endregion
 }

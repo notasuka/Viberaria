@@ -5,17 +5,17 @@ Configs: {
 
 		ViberariaEnabled: {
 			Label: Viberaria Enabled
-			Tooltip: ""
+			Tooltip: Whether the mod is active
 		}
 
 		MaxIntensity: {
 			Label: Max Intensity
-			Tooltip: ""
+			Tooltip: The maximum strength of vibrations
 		}
 
 		MinIntensity: {
 			Label: Min Intensity
-			Tooltip: ""
+			Tooltip: The minimum strength of vibrations
 		}
 	}
 

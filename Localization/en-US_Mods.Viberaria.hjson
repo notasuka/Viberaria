@@ -1,24 +1,4 @@
 Configs: {
-	tConfig: {
-		DisplayName: t Config
-		Headers.ViberariaConfig: Viberaria Config Header
-
-		ViberariaEnabled: {
-			Label: Viberaria Enabled
-			Tooltip: Whether the mod is active
-		}
-
-		MaxIntensity: {
-			Label: Max Intensity
-			Tooltip: The maximum strength of vibrations
-		}
-
-		MinIntensity: {
-			Label: Min Intensity
-			Tooltip: The minimum strength of vibrations
-		}
-	}
-
 	ViberariaConfig: {
 		DisplayName: Viberaria Config
 
@@ -30,42 +10,42 @@ Configs: {
 
 		ViberariaEnabled: {
 			Label: Viberaria Enabled
-			Tooltip: ""
-		}
-
-		MinIntensity: {
-			Label: Min Intensity
-			Tooltip: ""
+			Tooltip: Whether the mod is active
 		}
 
 		MaxIntensity: {
 			Label: Max Intensity
-			Tooltip: ""
+			Tooltip: The maximum strength of vibration scaling
+		}
+
+		MinIntensity: {
+			Label: Min Intensity
+			Tooltip: The minimum strength of vibration scaling
 		}
 
 		HealthVibratationScalingEnabled: {
 			Label: Health Vibratation Scaling Enabled
-			Tooltip: ""
+			Tooltip: Whether the plug should vibrate based on your current health
 		}
 
 		DamageVibrationEnabled: {
 			Label: Damage Vibration Enabled
-			Tooltip: ""
+			Tooltip: Whether the plug should vibrate when you get hurt
 		}
 
 		PotionUseVibrationEnabled: {
 			Label: Potion Use Vibration Enabled
-			Tooltip: ""
+			Tooltip: Whether the plug should vibrate when you use a potion
 		}
 
 		EffectDamageVibrationEnabled: {
 			Label: Effect Damage Vibration Enabled
-			Tooltip: ""
+			Tooltip: Whether the plug should vibrate when you get any debuffs
 		}
 
 		RespawnTimerVibrationEnabled: {
 			Label: Respawn Timer Vibration Enabled
-			Tooltip: ""
+			Tooltip: Whether the plug should vibrate when you get killed
 		}
 	}
 }

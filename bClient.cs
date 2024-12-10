@@ -1,16 +1,9 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Buttplug.Client;
 using Buttplug.Client.Connectors.WebsocketConnector;
-using Buttplug.Core.Messages;
-using Terraria;
 using Color = Microsoft.Xna.Framework.Color;
-
-using static Viberaria.tPlayer;
-using static Viberaria.bVibration;
-using static Viberaria.tSystem;
 
 namespace Viberaria;
 
@@ -44,6 +37,7 @@ public static class bClient
             ClientConnect();
         }
     }
+
     public static async void ClientDisconnect()
         => await _client.DisconnectAsync();
     public static async void ClientStartScanning()

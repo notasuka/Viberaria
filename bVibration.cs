@@ -139,7 +139,8 @@ public static class bVibration
 
     static async void VibrateAllDevices(float strength)
     {
-        tChat.LogToPlayer($"Vibrating at `{strength}`", Color.Lime);
+        if (Instance.DebugChatMessages)
+            tChat.LogToPlayer($"Vibrating at `{strength}`", Color.Lime);
 
         foreach (var device in _client.Devices)
         {

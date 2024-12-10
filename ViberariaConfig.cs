@@ -59,4 +59,9 @@ public class ViberariaConfig : ModConfig
     [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.2f)] public float DebuffMinIntensity;
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(500)] public int DebuffDelayMsec;
     #endregion
+
+    #region Other
+    [Header("OtherConfigs")]
+    [DefaultValue(false)] public bool DebugChatMessages;
+    #endregion
 }

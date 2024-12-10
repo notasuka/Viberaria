@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ModLoader;
 using Terraria.UI;
 
@@ -25,7 +24,6 @@ public class tSystem : ModSystem
         WorldLoaded = false;
         Halt();
     }
-        
 
     public override void OnWorldLoad()
         => WorldLoaded = true;

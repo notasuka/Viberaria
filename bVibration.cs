@@ -4,140 +4,131 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using static Viberaria.bClient;
-using static Viberaria.tPlayer;
 using static Viberaria.ViberariaConfig;
-using static Viberaria.tSystem;
 
 namespace Viberaria;
 
 public static class bVibration
 {
-    private static double _intensity = 0f;
-    private static bool _busy = false;
-    private static bool _dot = false;
-    private static int _duration;
-    private static double _AmmoConsumptionRate = 0f;
+    private static int _busyCount = 0;
+    private static bool _debuffActive = false;
+    private static float _debuffDuration;
+    private static double _ammoConsumptionRate = 0f;
 
     private static double AmmoConsumptionRate
     {
-        get => _AmmoConsumptionRate;
-        set => _AmmoConsumptionRate = value > Instance.MaxIntensity ? Instance.MaxIntensity : value;
+        get => _ammoConsumptionRate;
+        set => _ammoConsumptionRate = value > Instance.HealthMaxIntensity ? Instance.HealthMaxIntensity : value;
     }
-    private static double Intensity
-    {
-        get => _intensity;
-        set => _intensity = value > Instance.MaxIntensity ? Instance.MaxIntensity : value;
-    }
-
     private static bool CheckIfDead()
         => Main.clientPlayer.dead;
-    
-    public static async void HealthUpdated(double currentHp, double maxHp)
+
+    public static void HealthUpdated(int currentHp, int maxHp)
     {
         if(!Instance.ViberariaEnabled)
             return;
         if(!Instance.HealthVibratationScalingEnabled)
             return;
-        
+
         var dead = CheckIfDead();
-        if (_busy || _client.Connected == false || dead || _dot)
+        if (_busyCount > 0 || _client.Connected == false || dead || _debuffActive)
             return;
-        
-        double range = Instance.MaxIntensity - Instance.MinIntensity;
-        double normalizedValue = (1 - (currentHp / maxHp)) * range + Instance.MinIntensity;
-        double parsedValue = Double.Parse(normalizedValue.ToString("N2"));
-        if (Math.Abs(_intensity - parsedValue) > .1)
-            Intensity = parsedValue;
-        
-        foreach (var device in _client.Devices)
-        {
-            await device.VibrateAsync(Intensity);
-        }
+
+        float range = Instance.HealthMaxIntensity - Instance.HealthMinIntensity;
+        float normalizedValue = (1 - currentHp / (float)maxHp) * range + Instance.HealthMinIntensity;
+
+        VibrateAllDevices(normalizedValue);
     }
 
-    public static async void Damaged(Player.HurtInfo hurtInfo, bool alive)
+    public static async void Damaged(Player.HurtInfo hurtInfo, bool alive, int maxHp)
     {
-        if(!Instance.ViberariaEnabled)
-            return;
-        if(!Instance.DamageVibrationEnabled)
-            return;
-        if (_busy || _client.Connected == false || _dot || !alive)
-            return;
-        _busy = true;
+        if(!Instance.ViberariaEnabled || !Instance.DamageVibrationEnabled) return;
 
-        foreach (var device in _client.Devices)
+        if (_client.Connected == false || _debuffActive || !alive)
+            return;
+        _busyCount++;
+
+        float damageStrength;
+        if (Instance.StaticDamageVibration)
         {
-            await device.VibrateAsync(1f).ConfigureAwait(false);
+            damageStrength = Instance.DamageVibrationIntensity;
+        }
+        else
+        {
+            damageStrength = hurtInfo.Damage / (float)maxHp;
         }
 
-        var dead = CheckIfDead();
-        if (dead || _dot)
-            return;
-        
-        await Task.Delay(1000).ConfigureAwait(false);
-        _busy = false;
+        VibrateAllDevices(damageStrength);
+        await Task.Delay(Instance.DamageVibrationDurationMsec).ConfigureAwait(false);
+
+        _busyCount--;
+        HandleNotBusy();
     }
 
     public static async void Died(PlayerDeathReason damageSource, int respawnTimer)
     {
         if(!Instance.ViberariaEnabled)
             return;
-        if(!Instance.RespawnTimerVibrationEnabled)
+        if(!Instance.DeathVibrationEnabled)
             return;
-        _dot = false;
-        _duration = 0;
-        await Task.Delay(500);
-        foreach (var device in _client.Devices)
+        _debuffActive = false;
+        _debuffDuration = 0;
+        _busyCount++;
+        await Task.Delay(200); // i assume "give some time for Damaged/Debuff to set vibration speed"
+        VibrateAllDevices(Instance.DeathVibrationIntensity);
+
+        int deathDelay;
+        if (Instance.StaticDeathVibrationLength)
         {
-            await device.VibrateAsync(1f).ConfigureAwait(false);
+            deathDelay = Instance.DeathVibrationDurationMsec - 200;
         }
-        await Task.Delay(respawnTimer);
-        _busy = false;
+        else
+        {
+            deathDelay = respawnTimer / 60 * 1000 - 200; // timer / tickSpeed * (msec in a sec) - alreadyPassedTime
+            // respawnTimer is independent of dayRate (daytime speed) thus will always be 60 (afaict)
+
+        }
+        await Task.Delay(Math.Max(0, deathDelay));
+
+        _busyCount = 0;
+        HandleNotBusy();
     }
-    
-    public static async Task DamageOverTimeVibration(int duration)
+
+    public static async Task DamageOverTimeVibration(int durationTicks)
     {
         if(!Instance.ViberariaEnabled)
             return;
-        if(!Instance.EffectDamageVibrationEnabled)
+        if(!Instance.DebuffVibrationEnabled)
             return;
-        if (_dot)
+        if (_debuffActive)
             return;
-        _duration = duration;
-        while (_duration > 0)
+        _debuffDuration = durationTicks / 60f; // secs
+        _debuffActive = true;
+
+        bool setHigh = true; // start with the max intensity
+        while (_debuffDuration > 0)
         {
-            if (_duration == 0 || _dot == false)
-                return;
-            _dot = true;
-            tChat.LogToPlayer($"{_duration}", Color.Red);
-            foreach (var device in _client.Devices)
-            {
-                await device.VibrateAsync(1);
-                await Task.Delay(500);
-                await device.VibrateAsync(.5);
-                await Task.Delay(500);
-            }
-            _duration -= 60;
+            VibrateAllDevices(setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity);
+            setHigh = !setHigh;
+            await Task.Delay(Instance.DebuffDelayMsec);
+            _debuffDuration -= Instance.DebuffDelayMsec / 1000f;
         }
-        if (_duration < 0)
-            _dot = false;
+
+        HandleNotBusy();
+        _debuffActive = false;
     }
 
-    public static async void PotionVibration(Item item, bool quickHeal, int healValue)
+    public static async void PotionVibration(Item item)
     {
         if(!Instance.ViberariaEnabled)
             return;
         if(!Instance.PotionUseVibrationEnabled)
             return;
-        _busy = true;
-        await Task.Delay(250);
-        foreach (var device in _client.Devices)
-        {
-            await device.VibrateAsync(1);
-            await Task.Delay(2500);
-        }
-
-        _busy = false;
+        _busyCount++;
+        VibrateAllDevices(Instance.PotionVibrationIntensity);
+        await Task.Delay(Instance.PotionVibrationDurationMsec);
+        _busyCount--;
+        HandleNotBusy();
     }
 
     public static void SoIStartedBlasting(Item weapon, Item ammo)
@@ -146,19 +137,35 @@ public static class bVibration
         AmmoConsumptionRate += .01;
     }
 
-    public static async void Halt()
+    static async void VibrateAllDevices(float strength)
     {
+        if (Instance.DebugChatMessages)
+            tChat.LogToPlayer($"Vibrating at `{strength}`", Color.Lime);
+
         foreach (var device in _client.Devices)
         {
-            await device.VibrateAsync(0f).ConfigureAwait(false);
+            await device.VibrateAsync(strength * Instance.VibratorMaxIntensity).ConfigureAwait(false);
         }
-        _busy = false;
+    }
+
+    static void HandleNotBusy()
+    {
+        if (_busyCount <= 0)
+        {
+            _busyCount = 0;
+            Halt();
+        }
+    }
+
+    public static void Halt()
+    {
+        VibrateAllDevices(0f);
     }
 
     public static void Reset()
     {
-        _busy = false;
-        _dot = false;
-        _duration = 0;
+        _busyCount = 0;
+        _debuffActive = false;
+        _debuffDuration = 0;
     }
 }

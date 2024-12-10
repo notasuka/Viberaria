@@ -1,9 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Buttplug.Core.Messages;
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -18,28 +12,44 @@ namespace Viberaria;
 
 public class tPlayer : ModPlayer
 {
-    private readonly int[] _debuffs = new int[] { 20, 24, 44, 70 };
-    public override  void OnEnterWorld()
+    private readonly int[] _debuffs = { 20, 24, 44, 70 };
+
+    public override void OnEnterWorld()
         => ClientConnect();
+
     public override void Load()
         => ClientHandles();
+
+    public override void Unload()
+        => ClientDisconnect();
+
     public override void NaturalLifeRegen(ref float regen)
-        => HealthUpdated(Player.statLife, Player.statLifeMax);
+    {
+        if (Player == Main.LocalPlayer)
+            HealthUpdated(Player.statLife, Player.statLifeMax);
+    }
+
     public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
-        => Died(damageSource, Player.respawnTimer);
+    {
+        if (Player == Main.LocalPlayer)
+            Died(damageSource, Player.respawnTimer );
+    }
     public override void OnHurt(Player.HurtInfo hurtInfo)
-        => Damaged(hurtInfo, Player.dead);
-    public override void GetHealLife(Item item, bool quickHeal, ref int healValue)
-        => PotionVibration(item, quickHeal, healValue);
-    public override void GetHealMana(Item item, bool quickHeal, ref int healValue)
-        => PotionVibration(item, quickHeal, healValue);
+    {
+        if (Player == Main.LocalPlayer)
+            Damaged(hurtInfo, !Player.dead, Player.statLifeMax2);
+    }
+
     public override void OnConsumeAmmo(Item weapon, Item ammo)
-        => SoIStartedBlasting(weapon, ammo);
+    {
+        if (Player == Main.LocalPlayer)
+            SoIStartedBlasting(weapon, ammo);
+    }
     
     public override void OnRespawn()
     {
+        Reset(); // first reset to prevent _busy from blocking, then rerun health update
         HealthUpdated(Player.statLife, Player.statLifeMax);
-        Reset();
     }
 
     public override async void PreUpdateBuffs()

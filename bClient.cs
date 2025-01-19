@@ -26,7 +26,9 @@ public static class bClient
 
     public static async void ClientConnect()
     {
-        if (_client.Connected)
+        if (_client.Connected ||
+            (tSystem.tSys != null && !tSystem.tSys.WorldLoaded) ||
+            !Instance.ViberariaEnabled)
             return;
 
         try
@@ -55,6 +57,7 @@ public static class bClient
         }
         catch (System.Net.Sockets.SocketException ex)
         {
+            // This is likely because there is already a connection.
             tChat.LogToPlayer($"Viberaria: SocketException. \"{ex.Message}\". You may have to restart your game to " +
                               $"fix this error.", Color.Orange);
             ModContent.GetInstance<Viberaria>().Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
@@ -62,7 +65,7 @@ public static class bClient
             await Task.Delay(4000);
             ClientConnect();
         }
-        catch (Exception ex) // todo: specify exception type
+        catch (Exception ex)  // Generic error logging just in case..
         {
             tChat.LogToPlayer("Viberaria: Likely couldn't connect to Intiface. Make sure you have Intiface Central " +
                               "running on this pc or disable the mod in the mod configuration.", Color.Orange);

@@ -16,7 +16,6 @@ public class ViberariaConfig : ModConfig
     public static int[] DebuffsSelected;
     public override ConfigScope Mode => ConfigScope.ClientSide;
 
-    #region Functions
     public static string IntifaceConnectionAddress
     {
         get
@@ -38,6 +37,7 @@ public class ViberariaConfig : ModConfig
         }
     }
 
+    #region Functions
     public static int[] FindModBuffs(List<string> debuffStrings)  // public so it can be called in tPlayer.OnWorldLoad if buffs are not found.
     {
         List<int> debuffs = new();
@@ -63,8 +63,9 @@ public class ViberariaConfig : ModConfig
             }
             else
             {
+                if (!Instance.Debuffs.NotifyUnknownBuffsOnLoad) continue;
                 tChat.LogToPlayer("Viberaria: Could not find debuff `" + debuffString + "`. " +
-                                  "Make sure the name is correct and reload the world.", Color.Orange );
+                                  "Make sure the name is correct and reload the world.", Color.Orange);
                 ModContent.GetInstance<Viberaria>().Logger.WarnFormat("Could not find debuff: {0}", debuffString);
             }
         }
@@ -75,6 +76,7 @@ public class ViberariaConfig : ModConfig
     public override void OnChanged()
     {
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
+        bClient.ClientConnect();
     }
     #endregion
 
@@ -164,6 +166,7 @@ public class ViberariaConfig : ModConfig
     public class DebuffSubpage
     {
         [Header("Debuffs")]
+        [DefaultValue(false)] public bool NotifyUnknownBuffsOnLoad;
         public List<string> DebuffNames = new()
         {
             "Poisoned",
@@ -221,22 +224,53 @@ public class ViberariaConfig : ModConfig
         //   - tModLoader/CustomDataTypes/Pair
         public override bool Equals(object obj) {
             if (obj is DebuffSubpage other)
-                return DebuffNames == other.DebuffNames;
+                return DebuffNames == other.DebuffNames &&
+                       ModNameReplacement == other.ModNameReplacement &&
+                       NotifyUnknownBuffsOnLoad == other.NotifyUnknownBuffsOnLoad;
             // ReSharper disable once BaseObjectEqualsIsObjectEquals
             return base.Equals(obj);
         }
 
         public override int GetHashCode() {
-            // ReSharper disable once NonReadonlyMemberInGetHashCode
-            return new { DebuffNames }.GetHashCode();
+            return new { DebuffNames, ModNameReplacement, NotifyUnknownBuffsOnLoad }.GetHashCode();
         }
     }
-
     #endregion
 
-    #region Other
-    [Header("OtherConfigs")]
-    [DefaultValue(false)] public bool DebugChatMessages;
-    #endregion
+    #region Debug config
+    [Header("DebugConfigs")]
+    public DebugToolsSubpage Debug = new();
 
+    [SeparatePage]
+    public class DebugToolsSubpage
+    {
+        [Header("DebuggingTools")]
+        [DefaultValue(false)] public bool Enabled;
+        [DefaultValue(true)] public bool ToyStrengthMessages;
+        [DefaultValue(false)] public bool ProcessEventMessages;
+
+        public override string ToString()
+        {
+            if (!Enabled)
+                return "Disabled";
+            List<string> enabled = ["time"];
+            if (ToyStrengthMessages) enabled.Add("toy");
+            if (ProcessEventMessages) enabled.Add("queue");
+            return string.Join(", ", enabled);
+        }
+
+        public override bool Equals(object obj) {
+            if (obj is DebugToolsSubpage other)
+                return Enabled == other.Enabled &&
+                ToyStrengthMessages == other.ToyStrengthMessages &&
+                ProcessEventMessages == other.ProcessEventMessages;
+            // ReSharper disable once BaseObjectEqualsIsObjectEquals
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode() {
+            return new { Enabled, ToyStrengthMessages, ProcessEventMessages }.GetHashCode();
+        }
+    }
+    #endregion Debug config
 }

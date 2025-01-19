@@ -18,7 +18,7 @@ public static class tChat
     {
         if (!Main.dedServ)
         {
-            if (Instance.DebugChatMessages)
+            if (Instance.Debug.Enabled)
             {
                 string time = DateTime.Now.Minute + ":" +
                               (DateTime.Now.Second + DateTime.Now.Millisecond * 0.001f).ToString("00.00");

@@ -1,8 +1,7 @@
 using Terraria.ModLoader;
 
-namespace Viberaria
+namespace Viberaria;
+
+public class Viberaria : Mod
 {
-	public class Viberaria : Mod
-	{
-	}
 }

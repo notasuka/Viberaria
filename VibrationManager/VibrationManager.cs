@@ -13,9 +13,9 @@ public static class VibrationManager
 {
     private static VibrationEvent _currentEvent = null;
     private static readonly Dictionary<VibrationPriority, LinkedList<VibrationEvent>> EventLists = new();
-    private static bool _processingBusy = false;
     private static float _currentStrength = 0f;
     private static object _currentStrengthLock = new();
+    private static object _eventCheckerLock = new();
 
     static VibrationManager()
     {
@@ -60,19 +60,15 @@ public static class VibrationManager
     {
         // Todo: There is likely a crash when locking the list if the intiface server stops while connected
         //  "NullReferenceException" at Viberaria.VibrationManager.VibrationManager.GetNextEvent(LinkedList`1 eventList)
-        // prevent async threads from modifying eventList while potentially removing elements.
-        lock (eventList)
+        while (eventList.First != null)
         {
-            while (eventList.First != null)
-            {
-                VibrationEvent currentEvent = eventList.First.Value;
-                if (!currentEvent.HasPassed())
-                    return currentEvent;
-                eventList.RemoveFirst();
-            }
-
-            return null;
+            VibrationEvent currentEvent = eventList.First.Value;
+            if (!currentEvent.HasPassed())
+                return currentEvent;
+            eventList.RemoveFirst();
         }
+
+        return null;
     }
 
     /// <summary>
@@ -80,46 +76,52 @@ public static class VibrationManager
     /// </summary>
     private static void ProcessEvents()
     {
-        if (_processingBusy) return;
-        _processingBusy = true;
-        string logMsg = "Iterating events.";
-
-        foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
-                                     .Cast<VibrationPriority>()
-                                     .OrderByDescending(priority => (int)priority))
+        Tuple<VibrationEvent, int> nextEvent = null;
+        lock (_eventCheckerLock)
         {
-            VibrationEvent currentEvent = GetNextEvent(EventLists[priority]);
-            if (currentEvent == null)
+            foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
+                         .Cast<VibrationPriority>()
+                         .OrderByDescending(priority => (int)priority))
             {
-                continue;
+                VibrationEvent currentEvent = GetNextEvent(EventLists[priority]);
+                if (currentEvent == null)
+                {
+                    continue;
+                }
+
+                // only vibrate if vibration strength/event changed
+                if (_currentEvent == currentEvent)
+                {
+                    if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+                        tChat.LogToPlayer("Iterating Events: Event ongoing.", Color.GreenYellow);
+                    return;
+                }
+
+                _currentEvent = currentEvent;
+
+                int callbackTime = (int)(currentEvent.Timestamp - DateTime.Now).TotalMilliseconds +
+                                   currentEvent.Duration;
+                if (callbackTime <= 0) continue;
+
+                if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+                    tChat.LogToPlayer("Iterating Events: Event found.", Color.GreenYellow);
+                nextEvent = new Tuple<VibrationEvent, int>(currentEvent, callbackTime);
+                break;
             }
+        }
 
-            // only vibrate if vibration strength/event changed
-            if (_currentEvent == currentEvent)
-            {
-                _processingBusy = false;
-                if (Instance.DebugChatMessages) tChat.LogToPlayer(logMsg + " Event ongoing.", Color.GreenYellow);
-                return;
-            }
-            _currentEvent = currentEvent;
-
-            int callbackTime = (int)(currentEvent.Timestamp - DateTime.Now).TotalMilliseconds + currentEvent.Duration;
-            if (callbackTime <= 0) continue;
-
-            // first unset busy, then vibrate. In case async VibrateAllDevices somehow finished before _busy is set
-            // to false. Then it would not re-run ProcessEvents() and never call StopVibratingAllDevices.
-            _processingBusy = false;
-            if (Instance.DebugChatMessages) tChat.LogToPlayer(logMsg + " Event found.", Color.GreenYellow);
-            VibrateAllDevices(currentEvent.Strength, callbackTime);
+        if (nextEvent != null)
+        {
+            VibrateAllDevices(nextEvent.Item1.Strength, nextEvent.Item2);
             return;
         }
 
-        if (Instance.DebugChatMessages) tChat.LogToPlayer(logMsg + " Events passed! :D", Color.GreenYellow);
+        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+            tChat.LogToPlayer("Iterating Events: Events passed! :D", Color.GreenYellow);
         if (_currentEvent.HasPassed())
         {
             StopVibratingAllDevices();
         }
-        _processingBusy = false;
     }
 
     /// <summary>
@@ -137,9 +139,11 @@ public static class VibrationManager
             {
                 // lower the amount of chat spam
                 _currentStrength = strength;
-                if (Instance.DebugChatMessages)
+                if (Instance.Debug.Enabled)
                 {
-                    tChat.LogToPlayer($"Vibrating at `{strength}` for `{callBackTime}` msec", Color.Lime);
+                    if (Instance.Debug.ToyStrengthMessages)
+                        tChat.LogToPlayer($"Vibrating at `{strength}` for `{callBackTime}` msec", Color.Lime);
+
                     // safeguard to prevent crash from out of bounds strength.
                     if (strength < 0)
                     {
@@ -159,7 +163,8 @@ public static class VibrationManager
         }
 
         await Task.Delay(callBackTime);
-        if (Instance.DebugChatMessages) tChat.LogToPlayer($"  Event `{strength},{callBackTime}` finished.", Color.GreenYellow);
+        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+            tChat.LogToPlayer($"  Event `{strength},{callBackTime}` finished.", Color.GreenYellow);
         ProcessEvents();
     }
 
@@ -203,7 +208,7 @@ public static class VibrationManager
                 _currentStrength = 0;
 
                 // Similar to VibrateAllDevices but without calling ProcessEvents afterward
-                if (Instance.DebugChatMessages)
+                if (Instance.Debug.Enabled && Instance.Debug.ToyStrengthMessages)
                     tChat.LogToPlayer("Vibrating at `0`", Color.Lime);
             }
 

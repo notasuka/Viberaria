@@ -14,8 +14,8 @@ public static class VibrationManager
     private static VibrationEvent _currentEvent = null;
     private static readonly Dictionary<VibrationPriority, LinkedList<VibrationEvent>> EventLists = new();
     private static float _currentStrength = 0f;
-    private static object _currentStrengthLock = new();
-    private static object _eventCheckerLock = new();
+    private static readonly object CurrentStrengthLock = new();
+    private static readonly object EventCheckerLock = new();
 
     static VibrationManager()
     {
@@ -45,6 +45,9 @@ public static class VibrationManager
         ProcessEvents();
     }
 
+    /// <summary>
+    /// Remove all vibration events and stop all toys.
+    /// </summary>
     public static void Halt()
     {
         foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
@@ -56,9 +59,15 @@ public static class VibrationManager
         StopVibratingAllDevices();
     }
 
+    /// <summary>
+    /// Get the first vibration event in the given list that hasn't passed yet.
+    /// </summary>
+    /// <param name="eventList">The event list of a certain Vibration Priority</param>
+    /// <returns>The first valid event in the list, or null if none found.</returns>
     private static VibrationEvent GetNextEvent(LinkedList<VibrationEvent> eventList)
     {
-        // Todo: There is likely a crash when locking the list if the intiface server stops while connected
+        // Todo: There might be a crash when locking the list if the intiface server stops while connected. Not
+        //  sure what the exact context is...
         //  "NullReferenceException" at Viberaria.VibrationManager.VibrationManager.GetNextEvent(LinkedList`1 eventList)
         while (eventList.First != null)
         {
@@ -77,7 +86,7 @@ public static class VibrationManager
     private static void ProcessEvents()
     {
         Tuple<VibrationEvent, int> nextEvent = null;
-        lock (_eventCheckerLock)
+        lock (EventCheckerLock)
         {
             foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
                          .Cast<VibrationPriority>()
@@ -132,7 +141,7 @@ public static class VibrationManager
     /// <param name="callBackTime">How long to vibrate the toy.</param>
     private static async void VibrateAllDevices(float strength, int callBackTime)
     {
-        lock (_currentStrengthLock)
+        lock (CurrentStrengthLock)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (_currentStrength != strength)
@@ -200,7 +209,7 @@ public static class VibrationManager
     /// </summary>
     private static void StopVibratingAllDevices()
     {
-        lock (_currentStrengthLock)
+        lock (CurrentStrengthLock)
         {
             // lower the amount of chat spam
             if (_currentStrength != 0)

@@ -15,8 +15,15 @@ public static class bClient
 {
     public static readonly ButtplugClient _client = new("Viberaria");
     private static ButtplugWebsocketConnector _connector;
-    private static bool connected = false;
+    /// <summary>
+    /// Indicate whether the mod is intentionally connected with Intiface. If Intiface disconnects while
+    /// this variable is true, it tries to reconnect.
+    /// </summary>
+    private static bool _connected = false;
 
+    /// <summary>
+    /// Subscribe to intiface events.
+    /// </summary>
     public static void ClientHandles()
     {
         _client.DeviceAdded += HandleDeviceAdded;
@@ -35,7 +42,7 @@ public static class bClient
         {
             _connector = new ButtplugWebsocketConnector(new Uri("ws://" + IntifaceConnectionAddress));
             await _client.ConnectAsync(_connector);
-            connected = true;
+            _connected = true;
             tChat.LogToPlayer("Connected to Intiface!", Color.Aqua);
             await _client.StartScanningAsync();
         }
@@ -76,11 +83,14 @@ public static class bClient
         }
     }
 
+    /// <summary>
+    /// Handle disconnecting from Intiface Central and unsubscribing from its events.
+    /// </summary>
     public static async void ClientRemoveHandles()
     {
         try
         {
-            connected = false;
+            _connected = false;
             await _client.DisconnectAsync();
             _client.DeviceAdded -= HandleDeviceAdded;
             _client.DeviceRemoved -= HandleDeviceRemoved;
@@ -98,9 +108,14 @@ public static class bClient
     private static void HandleDeviceRemoved(object obj, DeviceRemovedEventArgs args)
         => tChat.LogToPlayer($"{args.Device.Name} has been removed!", Color.Aqua);
 
+    /// <summary>
+    /// Log and try to reconnect when intiface disconnects from Viberaria. Only reconnect if the disconnection was unintentional.
+    /// </summary>
+    /// <param name="obj">The ButtplugClient sender.</param>
+    /// <param name="args">Empty event args.</param>
     private static void HandleServerDisconnect(object obj, EventArgs args)
     {
-        tChat.LogToPlayer("Intiface server disconnected!" + (connected ? " Attempting reconnect..." : ""), Color.Aqua);
-        if (connected) ClientConnect();
+        tChat.LogToPlayer("Intiface server disconnected!" + (_connected ? " Attempting reconnect..." : ""), Color.Aqua);
+        if (_connected) ClientConnect();
     }
 }

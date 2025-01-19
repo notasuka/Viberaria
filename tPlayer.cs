@@ -62,7 +62,7 @@ public class tPlayer : ModPlayer
         {
             int index = Player.FindBuffIndex(buffId);
             if (index != -1)
-                await DamageOverTimeVibration(Player.buffTime[index]);
+                await DebuffVibration(Player.buffTime[index]);
         }
     }
 
@@ -72,12 +72,6 @@ public class tPlayer : ModPlayer
         {
             Reset();
             Halt();
-            return;
         }
-        // todo: reenable
-        // if (tSys.WorldLoaded && _client.Connected != true)
-        // {
-        //     ClientConnect();
-        // }
     }
 }

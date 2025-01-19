@@ -16,6 +16,9 @@ public class ViberariaConfig : ModConfig
     public static int[] DebuffsSelected;
     public override ConfigScope Mode => ConfigScope.ClientSide;
 
+    /// <summary>
+    /// Parse the config subpage to get a string of the intiface IP and port.
+    /// </summary>
     public static string IntifaceConnectionAddress
     {
         get

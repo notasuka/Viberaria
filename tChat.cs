@@ -14,6 +14,11 @@ public static class tChat
         return NetworkText.FromLiteral(msg);
     }
 
+    /// <summary>
+    /// Send a message to the player client in chat with a given color.
+    /// </summary>
+    /// <param name="msg">The message to send. Is automatically prefixed with the timestamp when the Debug config has been enabled.</param>
+    /// <param name="color">The color the message should have.</param>
     public static void LogToPlayer(string msg, Color color)
     {
         if (!Main.dedServ)

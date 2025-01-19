@@ -85,7 +85,7 @@ public static class bVibration
         AddEvent(VibrationPriority.Death, deathDelay, Instance.DeathVibrationIntensity, true);
     }
 
-    public static async Task DamageOverTimeVibration(int durationTicks)
+    public static async Task DebuffVibration(int durationTicks)
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.DebuffVibrationEnabled ||

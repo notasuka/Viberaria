@@ -1,21 +1,24 @@
 # Viberaria
 A Buttplug.io Mod for Terraria/tModLoader
 
-# Features
+## Features
 * Health scaling vibration.
 * Damage vibration
-* Damage over time vibration
-* Health/Mana restore vibration
+* Debuff vibration
+* Health/Mana potion vibration
 * Death vibration
-* Configuration (WIP)
-* Toggles (Fully implemented)
+* Configuration for each feature:
+  * Enabled / Disabled
+  * Vibration strength
+  * Vibration duration
+* Works in Multiplayer (No need to be installed on the server)
 
-# Currently known bug
-Reloading the mod leads to game crash when you join a world. Not much of an issue but I don't know how to go about fixing this without breaking things like I had tried in the past.
-
-# Installation
-1) Download the latest release
-2) Open the Mods directory at Documents\My Games\Terraria\tModLoader\Mods
-3) Insert the file into the Mods directory.
-4) Open and run a server with Intiface
-5) Launch tModLoader and enable the mod
+## Installation
+1) Download the latest release.
+2) Open the `Mods` directory at `Documents\My Games\Terraria\tModLoader\Mods`.
+3) Insert the file into the `Mods` directory.
+4) Launch `Intiface Central` and start the Intiface server.
+5) Launch `tModLoader`
+6) Enable the mod (Workshop -> Manage Mods)
+   1) Configure the Intiface IP address in the mod configuration.
+7) Join a single- or multiplayer world

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config;
+using static Viberaria.VibrationManager.VibrationManager;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 
 namespace Viberaria;
@@ -79,6 +80,7 @@ public class ViberariaConfig : ModConfig
     public override void OnChanged()
     {
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
+        Halt();
         bClient.ClientConnect();
     }
     #endregion

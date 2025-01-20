@@ -102,14 +102,21 @@ public static class VibrationManager
                 if (_currentEvent == currentEvent)
                 {
                     if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
-                        tChat.LogToPlayer("Iterating Events: Event ongoing.", Color.GreenYellow);
+                    {
+                        TimeSpan timeLeft = _currentEvent.EndTime - DateTime.Now;
+                        double secs = Math.Truncate(timeLeft.TotalSeconds);
+                        int nanos = (int)Math.Abs(timeLeft.TotalNanoseconds - secs * 1_000_000_000);
+                        string nanosStr = nanos.ToString().PadLeft(9, '0'); // ensure leading zeros
+                        tChat.LogToPlayer($"Iterating Events: Event ongoing ({secs}.{nanosStr} left).", Color.GreenYellow);
+                    }
                     return;
                 }
 
                 _currentEvent = currentEvent;
 
-                int callbackTime = (int)(currentEvent.Timestamp - DateTime.Now).TotalMilliseconds +
-                                   currentEvent.Duration;
+                int callbackTime = (int)Math.Ceiling((currentEvent.Timestamp - DateTime.Now).TotalMilliseconds +
+                                   currentEvent.Duration);
+                // Take the ceiling, to ensure the vibration isn't shorter than the event duration.
                 if (callbackTime <= 0) continue;
 
                 if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)

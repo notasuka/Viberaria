@@ -17,6 +17,9 @@ public class VibrationEvent
     /// </summary>
     public float Strength { get; }
 
+    public DateTime EndTime => Timestamp + TimeSpan.FromMilliseconds(Duration);
+
+
     /// <summary>
     /// Create a new vibration event indicating the strength of the vibration at a certain time.
     /// </summary>
@@ -45,7 +48,6 @@ public class VibrationEvent
     /// current time is past this end time.</remarks>
     public bool HasPassed()
     {
-        DateTime eventEndTime = Timestamp + TimeSpan.FromMilliseconds(Duration);
-        return DateTime.Now >= eventEndTime;
+        return DateTime.Now >= EndTime;
     }
 }

@@ -85,7 +85,7 @@ public static class VibrationManager
     /// </summary>
     private static void ProcessEvents()
     {
-        Tuple<VibrationEvent, int> nextEvent = null;
+        bool eventFound = false;
         lock (EventCheckerLock)
         {
             foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
@@ -112,23 +112,25 @@ public static class VibrationManager
                     return;
                 }
 
-                _currentEvent = currentEvent;
-
-                int callbackTime = (int)Math.Ceiling((currentEvent.Timestamp - DateTime.Now).TotalMilliseconds +
-                                   currentEvent.Duration);
-                // Take the ceiling, to ensure the vibration isn't shorter than the event duration.
-                if (callbackTime <= 0) continue;
 
                 if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+                {
                     tChat.LogToPlayer("Iterating Events: Event found.", Color.GreenYellow);
-                nextEvent = new Tuple<VibrationEvent, int>(currentEvent, callbackTime);
+
+                    double remainingTime = (currentEvent.EndTime - DateTime.Now).TotalMilliseconds;
+                    int callbackT = (int)Math.Ceiling(remainingTime);
+                    tChat.LogToPlayer($"dur={_currentEvent.Duration}ms;rem={remainingTime}ms;callback={callbackT}ms", Color.YellowGreen);
+                }
+
+                eventFound = true;
+                _currentEvent = currentEvent;
                 break;
             }
         }
 
-        if (nextEvent != null)
+        if (eventFound)
         {
-            VibrateAllDevices(nextEvent.Item1.Strength, nextEvent.Item2);
+            VibrateAllDevices(_currentEvent);
             return;
         }
 
@@ -144,43 +146,35 @@ public static class VibrationManager
     /// Vibrate all connected toys at a given strength for a given time, after which it calls ProcessEvents to get
     /// the next up vibration (eg. a lower priority event).
     /// </summary>
-    /// <param name="strength">How strong the toys should vibrate.</param>
-    /// <param name="callBackTime">How long to vibrate the toy.</param>
-    private static async void VibrateAllDevices(float strength, int callBackTime)
+    /// <param name="vibrationEvent">The event containing vibration strength and duration.</param>
+    private static async void VibrateAllDevices(VibrationEvent vibrationEvent)
     {
+        // Take the ceiling, to ensure the vibration isn't shorter than the event duration.
+        int callbackTime = (int)Math.Ceiling((vibrationEvent.EndTime - DateTime.Now).TotalMilliseconds);
+
         lock (CurrentStrengthLock)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_currentStrength != strength)
+            if (_currentStrength != vibrationEvent.Strength)
             {
                 // lower the amount of chat spam
-                _currentStrength = strength;
-                if (Instance.Debug.Enabled)
+                _currentStrength = vibrationEvent.Strength;
+                if (Instance.Debug.Enabled && Instance.Debug.ToyStrengthMessages)
                 {
-                    if (Instance.Debug.ToyStrengthMessages)
-                        tChat.LogToPlayer($"Vibrating at `{strength}` for `{callBackTime}` msec", Color.Lime);
-
-                    // safeguard to prevent crash from out of bounds strength.
-                    if (strength < 0)
-                    {
-                        tChat.LogToPlayer("Tried to vibrate at a strength below 0! Clamping.", Color.Red);
-                        strength = 0;
-                    }
-
-                    if (strength > 1)
-                    {
-                        tChat.LogToPlayer("Tried to vibrate at a strength above 1! Clamping.", Color.Red);
-                        strength = 1;
-                    }
+                        tChat.LogToPlayer($"Vibrating at `{vibrationEvent.Strength}` for `{callbackTime}` msec", Color.Lime);
                 }
 
-                TryVibrateAllDevices(strength);
+                TryVibrateAllDevices(vibrationEvent.Strength);
             }
         }
 
-        await Task.Delay(callBackTime);
+        await Task.Delay(callbackTime);
+        // Task.Delay isn't accurate enough and can cause the event to see itself as ongoing event. Thus,
+        // mark it as finished.
+        vibrationEvent.MarkAsFinished();
+
         if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
-            tChat.LogToPlayer($"  Event `{strength},{callBackTime}` finished.", Color.GreenYellow);
+            tChat.LogToPlayer($"  Event `{vibrationEvent.Strength},{callbackTime}` finished.", Color.GreenYellow);
         ProcessEvents();
     }
 

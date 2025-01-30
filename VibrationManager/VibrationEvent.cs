@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Viberaria.VibrationManager;
 
@@ -17,7 +18,8 @@ public class VibrationEvent
     /// </summary>
     public float Strength { get; }
 
-    public DateTime EndTime => Timestamp + TimeSpan.FromMilliseconds(Duration);
+    public DateTime EndTime;
+    private bool _hasFinished;
 
 
     /// <summary>
@@ -28,9 +30,17 @@ public class VibrationEvent
     /// <param name="strength">How strong the toy should vibrate during the event.</param>
     public VibrationEvent(DateTime timestamp, int duration, float strength)
     {
+        if (strength is < 0 or > 1)
+        {
+            tChat.LogToPlayer($"Tried to vibrate at a strength outside of 0.0-1.0 ({strength})! Clamping.", Color.Red);
+            strength = Math.Clamp(strength, 0, 1);
+        }
+
         Timestamp = timestamp;
         Duration = duration;
         Strength = strength;
+        // calculate end time in constructor to reduce unnecessary computations
+        EndTime = Timestamp + TimeSpan.FromMilliseconds(Duration);
     }
 
     /// <summary>
@@ -48,6 +58,11 @@ public class VibrationEvent
     /// current time is past this end time.</remarks>
     public bool HasPassed()
     {
-        return DateTime.Now >= EndTime;
+        return _hasFinished || DateTime.Now >= EndTime;
+    }
+
+    public void MarkAsFinished()
+    {
+        _hasFinished = true;
     }
 }

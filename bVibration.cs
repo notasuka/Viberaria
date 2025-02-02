@@ -103,7 +103,7 @@ public static class bVibration
         {
             float strength = setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity;
             AddEvent(VibrationPriority.Debuff, Instance.DebuffDelayMsec+10, strength, false);
-            // add 3 to the duration for a neater overlap to prevent gaps in the middle
+            // add 10 to the duration for a neater overlap to prevent gaps in the middle
             setHigh = !setHigh;
             _debuffDuration -= Instance.DebuffDelayMsec / 1000f;
             await Task.Delay(Instance.DebuffDelayMsec);
@@ -129,6 +129,26 @@ public static class bVibration
             !_client.Connected)
             return;
         AmmoConsumptionRate += .01;
+    }
+
+    public static void ManaUsageVibration(Item weapon)
+    {
+        if (!Instance.ViberariaEnabled ||
+            // !Instance. mana usage vibration enabled ||
+            !_client.Connected)
+            return;
+        
+    }
+
+    public static async void FishBite()
+    {
+        if (!Instance.ViberariaEnabled ||
+            !Instance.FishingVibrationEnabled ||
+            !_client.Connected)
+            return;
+        AddEvent(VibrationPriority.Fishing, Instance.FishingLengthMsec1, Instance.FishingIntensity1, false);
+        await Task.Delay(Instance.FishingLengthMsec1 + Instance.FishingDelayMsec1);
+        AddEvent(VibrationPriority.Fishing, Instance.FishingLengthMsec2, Instance.FishingIntensity2, false);
     }
 
     public static void Reset()

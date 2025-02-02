@@ -242,6 +242,16 @@ public class ViberariaConfig : ModConfig
     }
     #endregion
 
+    # region Fishing config
+    [Header("FishingVibration")]
+    [DefaultValue(true)] public bool FishingVibrationEnabled;
+    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.30f)] public float FishingIntensity1;
+    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(200)] public int FishingLengthMsec1;
+    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(200)] public int FishingDelayMsec1;
+    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.30f)] public float FishingIntensity2;
+    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(300)] public int FishingLengthMsec2;
+    # endregion Fishing config
+
     #region Debug config
     [Header("DebugConfigs")]
     public DebugToolsSubpage Debug = new();

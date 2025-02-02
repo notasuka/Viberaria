@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Viberaria.VibrationManager;
 using static Viberaria.bClient;
@@ -13,6 +15,8 @@ public static class bVibration
     private static double _ammoConsumptionRate = 0f;
     private static bool _debuffActive = false;
     private static float _debuffDuration = 0f;
+    private static LinkedList<(DateTime, int)> _manaUsages = new();
+    private static LinkedList<DateTime> _ammoUsages = new();
 
     private static double AmmoConsumptionRate
     {
@@ -131,13 +135,98 @@ public static class bVibration
         AmmoConsumptionRate += .01;
     }
 
-    public static void ManaUsageVibration(Item weapon)
+    /// <summary>
+    /// Clear all events earlier than the given <paramref name="timespan"/> ago, then sum the remaining events.
+    /// </summary>
+    /// <param name="timespan">How long of a time to take the sum of.</param>
+    /// <returns>The sum of the (remaining) events in the usage list.</returns>
+    private static int GetAmmoUsageSum(TimeSpan timespan)
+    {
+        // same function, but without (DateTime, int), since linkedList has a .Count property for this, for efficiency.
+        DateTime endTime = DateTime.Now - timespan;
+        while (_ammoUsages.First != null && _ammoUsages.First.Value < endTime)
+        {
+            _ammoUsages.RemoveFirst();
+        }
+
+        return _ammoUsages.Count;
+    }
+
+    /// <summary>
+    /// Clear all events earlier than the given <paramref name="timespan"/> ago, then sum the remaining events.
+    /// </summary>
+    /// <param name="timespan">How long of a time to take the sum of.</param>
+    /// <returns>The sum of the (remaining) events in the usage list.</returns>
+    private static int GetManaUsageSum(TimeSpan timespan)
+    {
+        DateTime endTime = DateTime.Now - timespan;
+        while (_manaUsages.First != null && _manaUsages.First.Value.Item1 < endTime)
+        {
+            _manaUsages.RemoveFirst();
+        }
+
+        int sum = 0;
+        foreach ((DateTime _, int count) in _manaUsages)
+        {
+            sum += count;
+        }
+
+        return sum;
+    }
+
+    public static void ManaUsageVibration(Item item, Player player)
     {
         if (!Instance.ViberariaEnabled ||
-            // !Instance. mana usage vibration enabled ||
+            !Instance.ManaUsageVibrationEnabled ||
             !_client.Connected)
             return;
-        
+        if (player.GetManaCost(item) == 0) return;
+
+        _manaUsages.AddLast((DateTime.Now, player.GetManaCost(item)));
+
+        TimeSpan timespan = new TimeSpan(ticks: Instance.ManaUsageBuildupTimeMsec * 10_000);
+        // Take the sum of the past BuildupTime seconds of usage, and divide it by the BuildupTime.
+        // Note that BuildupTime is in milliseconds. That means we need to divide it by 1000 to get usage per second.
+        double manaPerSecond = GetManaUsageSum(timespan) / (Instance.ManaUsageBuildupTimeMsec / 1000.0);
+        double manaUsagePercentage = manaPerSecond / player.statManaMax2;
+        double vibrationStrength = manaUsagePercentage * Instance.ManaUsageIntensityFactor;
+        int vibrationDurationMsec = (int)(item.useTime / 60.0 * 1000) + Instance.ManaUsageFadeDelayMsec;
+
+        if (Instance.Debug.Enabled && Instance.Debug.ManaAmmoUsageMessages)
+            tChat.LogToPlayer($"adding event timespan={timespan.TotalMilliseconds}ms,mps={manaPerSecond}, mup={manaUsagePercentage}, vs={vibrationStrength}, vdms={vibrationDurationMsec}", Color.Magenta);
+
+        AddEvent(VibrationPriority.ManaUsage,
+                 vibrationDurationMsec, // ticks -> sec -> msec, + 0.5 sec for fade delay
+                 (float)Math.Clamp(vibrationStrength, 0, Instance.MaxManaUsageIntensity),
+                 addToFront: false,
+                 clearOthers: true);
+
+
+        // add decrement vibrations for when the weapon stops being used. `clearOthers` means we can safely add
+        // other events after this event, and any new `ManaUsageVibration` will replace these events again.
+
+        // decrement the intensity in 20 steps (since lovense has 20 vibration levels, I guess)
+        // Also round up division to ensure the decrement delay is never 0
+        int msecIncrementDelay = (int)Math.Ceiling(Instance.ManaUsageBuildupTimeMsec / 20.0);
+
+        if (Instance.Debug.Enabled && Instance.Debug.ManaAmmoUsageMessages)
+            tChat.LogToPlayer($"adding `{Instance.ManaUsageBuildupTimeMsec/(double)msecIncrementDelay}` events dur={vibrationDurationMsec}+offsets,offset={msecIncrementDelay}", Color.Magenta);
+
+        for (int msecOffset = msecIncrementDelay; msecOffset < Instance.ManaUsageBuildupTimeMsec; msecOffset += msecIncrementDelay)
+        {
+            // strength * progress. The loop iterates in 20 steps, so it starts with
+            // `strength * (1 - (x/20) / 20)` which is `strength * (1 - 1/20)` aka `strength * 19/20`.
+            // Each iteration, x increases (msecOffset += msecIncrementDelay) so more is subtracted
+            // until `strength * 1/20`.
+            // And then VibrationManager sets the strength back to 0 since there are no more events left.
+            double strength = vibrationStrength * (1 - msecOffset / (double)Instance.ManaUsageBuildupTimeMsec);
+            float clampedStrength = (float)Math.Clamp(strength, 0, Instance.MaxManaUsageIntensity);
+
+            AddEvent(VibrationPriority.ManaUsage,
+                     vibrationDurationMsec + msecOffset,
+                     clampedStrength,
+                     false);
+        }
     }
 
     public static async void FishBite()

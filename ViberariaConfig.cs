@@ -158,6 +158,16 @@ public class ViberariaConfig : ModConfig
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(400)] public int PotionVibrationDurationMsec;
     #endregion
 
+    # region Mana Usage config
+    [Header("ManaUsageVibration")]
+    [DefaultValue(false)] public bool ManaUsageVibrationEnabled;
+    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.8f)] public float MaxManaUsageIntensity;
+    [Range(0.01f,5f), Increment(0.01f), DefaultValue(1f)] public float ManaUsageIntensityFactor;
+    [Range(MinTime,60000), Increment(IncrementTime), DefaultValue(2000)] public int ManaUsageBuildupTimeMsec;
+    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(1000)] public int ManaUsageFadeDelayMsec;
+
+    # endregion Mana Usage config
+
     #region Debuff config
     [Header("DebuffVibration")]
 
@@ -263,6 +273,7 @@ public class ViberariaConfig : ModConfig
         [DefaultValue(false)] public bool Enabled;
         [DefaultValue(true)] public bool ToyStrengthMessages;
         [DefaultValue(false)] public bool ProcessEventMessages;
+        [DefaultValue(false)] public bool ManaAmmoUsageMessages;
 
         public override string ToString()
         {
@@ -271,6 +282,7 @@ public class ViberariaConfig : ModConfig
             List<string> enabled = ["time"];
             if (ToyStrengthMessages) enabled.Add("toy");
             if (ProcessEventMessages) enabled.Add("queue");
+            if (ManaAmmoUsageMessages) enabled.Add("usage");
             return string.Join(", ", enabled);
         }
 
@@ -278,13 +290,14 @@ public class ViberariaConfig : ModConfig
             if (obj is DebugToolsSubpage other)
                 return Enabled == other.Enabled &&
                 ToyStrengthMessages == other.ToyStrengthMessages &&
-                ProcessEventMessages == other.ProcessEventMessages;
+                ProcessEventMessages == other.ProcessEventMessages &&
+                ManaAmmoUsageMessages == other.ManaAmmoUsageMessages;
             // ReSharper disable once BaseObjectEqualsIsObjectEquals
             return base.Equals(obj);
         }
 
         public override int GetHashCode() {
-            return new { Enabled, ToyStrengthMessages, ProcessEventMessages }.GetHashCode();
+            return new { Enabled, ToyStrengthMessages, ProcessEventMessages, ManaAmmoUsageMessages }.GetHashCode();
         }
     }
     #endregion Debug config

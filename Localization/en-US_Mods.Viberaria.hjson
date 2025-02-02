@@ -8,7 +8,9 @@ Configs: {
 			DamageVibration: Damage Vibration
 			DeathVibration: Death Vibration
 			PotionUseVibration: Potion Use Vibration
+			ManaUsageVibration: Mana Usage Vibration Header
 			DebuffVibration: Debuff Vibration
+			FishingVibration: Fishing Vibration Header
 			DebugConfigs: Debugging Tools
 		}
 
@@ -102,6 +104,31 @@ Configs: {
 			Tooltip: How long the toy vibrates when you take a health/mana potion
 		}
 
+		ManaUsageVibrationEnabled: {
+			Label: Mana Usage Vibration Enabled
+			Tooltip: Whether toys vibrate when you consume mana (with weapons). Strength depends on consumed mana vs total player mana.
+		}
+
+		MaxManaUsageIntensity: {
+			Label: Max Mana Usage Intensity
+			Tooltip: How strong the toy may vibrate. This is applied after the Mana Usage Intensity Factor is multiplied.
+		}
+
+		ManaUsageIntensityFactor: {
+			Label: Mana Usage Intensity Factor
+			Tooltip: How much the vibration strength should be multiplied.
+		}
+
+		ManaUsageBuildupTimeMsec: {
+			Label: Mana Usage Buildup Time Msec
+			Tooltip: What period of time should be used to calculate the average mana per second.
+		}
+
+		ManaUsageFadeDelayMsec: {
+			Label: Mana Usage Fade Delay Msec
+			Tooltip: How long should a toy stay at the peak strength before fading away.
+		}
+
 		DebuffVibrationEnabled: {
 			Label: Debuff Vibration Enabled
 			Tooltip: Whether toys vibrate when you have a debuff (alternating between two strengths)
@@ -125,6 +152,36 @@ Configs: {
 		Debuffs: {
 			Label: Debuffs
 			Tooltip: Configure debug options to get more details when something behaves unexpectedly.
+		}
+
+		FishingVibrationEnabled: {
+			Label: Fishing Vibration Enabled
+			Tooltip: Whether toys vibrate when a fish bites your hook. It gives two vibration pulses.
+		}
+
+		FishingIntensity1: {
+			Label: Fishing Intensity 1
+			Tooltip: The intensity of the first vibration pulse.
+		}
+
+		FishingLengthMsec1: {
+			Label: Fishing Length Msec 1
+			Tooltip: The duration of the first vibration pulse.
+		}
+
+		FishingDelayMsec1: {
+			Label: Fishing Delay Msec
+			Tooltip: The time between the first and second vibration pulse.
+		}
+
+		FishingIntensity2: {
+			Label: Fishing Intensity 2
+			Tooltip: The duration of the second vibration pulse.
+		}
+
+		FishingLengthMsec2: {
+			Label: Fishing Length Msec 2
+			Tooltip: The duration of the second vibration pulse.
 		}
 
 		Debug: {
@@ -190,6 +247,11 @@ Configs: {
 		ProcessEventMessages: {
 			Tooltip: Whether to send messages in chat about the VibrationEvent queue.
 			Label: Process Event Messages
+		}
+
+		ManaAmmoUsageMessages: {
+			Label: Mana Ammo Usage Messages
+			Tooltip: Whether to send messages in chat when mana- and ammo-consuming items are used.
 		}
 	}
 }

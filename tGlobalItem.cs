@@ -1,4 +1,6 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -20,5 +22,17 @@ public class tGlobalItem : GlobalItem
             if (player == Main.LocalPlayer)
                 PotionVibration(item);
         }
+    }
+
+    public override bool Shoot(Item item, Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type,
+        int damage, float knockback)
+    {
+        if (player == Main.LocalPlayer &&
+            player.GetManaCost(item) > 0)
+        {
+            ManaUsageVibration(item, player);
+        }
+
+        return base.Shoot(item, player, source, position, velocity, type, damage, knockback);
     }
 }

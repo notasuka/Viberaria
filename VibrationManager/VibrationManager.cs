@@ -119,7 +119,7 @@ public static class VibrationManager
 
                     double remainingTime = (currentEvent.EndTime - DateTime.Now).TotalMilliseconds;
                     int callbackT = (int)Math.Ceiling(remainingTime);
-                    tChat.LogToPlayer($"dur={_currentEvent.Duration}ms;rem={remainingTime}ms;callback={callbackT}ms", Color.YellowGreen);
+                    tChat.LogToPlayer($"dur={currentEvent.Duration}ms;rem={remainingTime}ms;callback={callbackT}ms", Color.YellowGreen);
                 }
 
                 eventFound = true;
@@ -151,6 +151,7 @@ public static class VibrationManager
     {
         // Take the ceiling, to ensure the vibration isn't shorter than the event duration.
         int callbackTime = (int)Math.Ceiling((vibrationEvent.EndTime - DateTime.Now).TotalMilliseconds);
+        if (callbackTime < 0) callbackTime = 0; // ensure not to delay infinitely (Task.Delay(-1)).
 
         lock (CurrentStrengthLock)
         {

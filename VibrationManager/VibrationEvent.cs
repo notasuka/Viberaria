@@ -61,6 +61,11 @@ public class VibrationEvent
         return _hasFinished || DateTime.Now >= EndTime;
     }
 
+    public bool InFuture()
+    {
+        return Timestamp > DateTime.Now;
+    }
+
     public void MarkAsFinished()
     {
         _hasFinished = true;

@@ -65,14 +65,14 @@ public class tPlayer : ModPlayer
         HealthUpdated(Player.statLife, Player.statLifeMax);
     }
 
-    public override async void PreUpdateBuffs()
+    public override void PreUpdateBuffs()
     {
         if (Main.myPlayer != Player.whoAmI) return;
         foreach (var buffId in DebuffsSelected)
         {
             int index = Player.FindBuffIndex(buffId);
             if (index != -1)
-                await DebuffVibration(Player.buffTime[index]);
+                DebuffVibration(Player.buffTime[index]);
         }
     }
 

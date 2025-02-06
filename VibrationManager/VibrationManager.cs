@@ -29,13 +29,14 @@ public static class VibrationManager
     /// Create a new event to vibrate plugs for a certain duration.
     /// </summary>
     /// <param name="priority">The priority of the event.</param>
+    /// <param name="timeOffset">The starting time offset from the current time (eg. starting in 1 second).</param>
     /// <param name="duration">The length of the vibration, in milliseconds.</param>
     /// <param name="strength">The strength of the vibration, from 0f to 1f.</param>
     /// <param name="addToFront">Whether the event should prioritize over other events of the same priority.</param>
     /// <param name="clearOthers">Whether the event should remove all other registered events of its priority.</param>
-    public static void AddEvent(VibrationPriority priority, int duration, float strength, bool addToFront, bool clearOthers = false)
+    public static void AddEvent(VibrationPriority priority, TimeSpan timeOffset, int duration, float strength, bool addToFront, bool clearOthers = false)
     {
-        VibrationEvent vibrationEvent = new(duration, strength);
+        VibrationEvent vibrationEvent = new(DateTime.Now + timeOffset, duration, strength);
         if (clearOthers)
             EventLists[priority].Clear();
         if (addToFront)
@@ -43,6 +44,28 @@ public static class VibrationManager
         else
             EventLists[priority].AddLast(vibrationEvent);
         ProcessEvents();
+    }
+
+    /// <summary>
+    /// Create a new event to vibrate plugs for a certain duration.
+    /// </summary>
+    /// <param name="priority">The priority of the event.</param>
+    /// <param name="duration">The length of the vibration, in milliseconds.</param>
+    /// <param name="strength">The strength of the vibration, from 0f to 1f.</param>
+    /// <param name="addToFront">Whether the event should prioritize over other events of the same priority.</param>
+    /// <param name="clearOthers">Whether the event should remove all other registered events of its priority.</param>
+    public static void AddEvent(VibrationPriority priority, int duration, float strength, bool addToFront, bool clearOthers = false)
+    {
+        AddEvent(priority, timeOffset: TimeSpan.Zero, duration, strength, addToFront, clearOthers);
+    }
+
+    /// <summary>
+    /// Clear all events in a priority's event list.
+    /// </summary>
+    /// <param name="priority">The priority of the event.</param>
+    public static void ClearEvents(VibrationPriority priority)
+    {
+        EventLists[priority].Clear();
     }
 
     /// <summary>
@@ -99,9 +122,10 @@ public static class VibrationManager
     /// <summary>
     /// Loop through all priorities and pick the first event of highest priority. Then vibrate toys with this event's strength.
     /// </summary>
-    private static void ProcessEvents()
+    private static async void ProcessEvents()
     {
         bool eventFound = false;
+        VibrationEvent soonestEvent = null;
         lock (EventCheckerLock)
         {
             foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
@@ -128,6 +152,16 @@ public static class VibrationManager
                     return;
                 }
 
+                if (soonestEvent == null ||
+                    currentEvent.Timestamp < soonestEvent.Timestamp)
+                {
+                    soonestEvent = currentEvent;
+                }
+
+                if (soonestEvent.InFuture())
+                {
+                    continue;
+                }
 
                 if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
                 {
@@ -150,11 +184,24 @@ public static class VibrationManager
             return;
         }
 
-        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
-            tChat.LogToPlayer("Iterating Events: Events passed! :D", Color.GreenYellow);
+        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages &&
+            !(soonestEvent != null && soonestEvent.InFuture()))
+            // don't print if there is an event planned in the future. The next message will print that instead.
+            tChat.LogToPlayer("Iterating Events: No event ongoing! :D", Color.GreenYellow);
+
         if (_currentEvent.HasPassed())
         {
             StopVibratingAllDevices();
+        }
+
+
+        if (soonestEvent != null && soonestEvent.InFuture())
+        {
+            TimeSpan delayTime = soonestEvent.Timestamp - DateTime.Now;
+            if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+                tChat.LogToPlayer($"Iterating Events: Soonest event in {delayTime.TotalMilliseconds} ms! Waiting...", Color.GreenYellow);
+            await Task.Delay(delayTime);
+            ProcessEvents();
         }
     }
 

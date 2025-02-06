@@ -13,7 +13,7 @@ namespace Viberaria;
 public static class bVibration
 {
     private static double _ammoConsumptionRate = 0f;
-    private static bool _debuffActive = false;
+    private static readonly object _debuffLock = new();
     private static float _debuffDuration = 0f;
     private static LinkedList<(DateTime, int)> _manaUsages = new();
     private static LinkedList<DateTime> _ammoUsages = new();
@@ -89,31 +89,26 @@ public static class bVibration
         AddEvent(VibrationPriority.Death, deathDelay, Instance.DeathVibrationIntensity, true);
     }
 
-    public static async Task DebuffVibration(int durationTicks)
+    public static void DebuffVibration(int durationTicks)
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.DebuffVibrationEnabled ||
            !_client.Connected)
             return;
 
-        if (_debuffActive)
-            return;
-
-        _debuffDuration = durationTicks / 60f; // secs
-        _debuffActive = true;
-
-        bool setHigh = true; // start with the max intensity
-        while (_debuffDuration > 0)
+        lock (_debuffLock)
         {
-            float strength = setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity;
-            AddEvent(VibrationPriority.Debuff, Instance.DebuffDelayMsec+10, strength, false);
-            // add 10 to the duration for a neater overlap to prevent gaps in the middle
-            setHigh = !setHigh;
-            _debuffDuration -= Instance.DebuffDelayMsec / 1000f;
-            await Task.Delay(Instance.DebuffDelayMsec);
-        }
+            ClearEvents(VibrationPriority.Debuff);
 
-        _debuffActive = false;
+            _debuffDuration = durationTicks / 60f; // secs
+            bool setHigh = true; // start with the max intensity
+            for (int loops = 1; Instance.DebuffDelayMsec * loops / 1000f > 0; loops++ )
+            {
+                float strength = setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity;
+                setHigh = !setHigh;
+                AddEvent(VibrationPriority.Debuff, loops * Instance.DebuffDelayMsec, strength, addToFront: false);
+            }
+        }
     }
 
     public static void PotionVibration(Item item)
@@ -275,20 +270,19 @@ public static class bVibration
         }
     }
 
-    public static async void FishBite()
+    public static void FishBite()
     {
         if (!Instance.ViberariaEnabled ||
             !Instance.FishingVibrationEnabled ||
             !_client.Connected)
             return;
         AddEvent(VibrationPriority.Fishing, Instance.FishingLengthMsec1, Instance.FishingIntensity1, false);
-        await Task.Delay(Instance.FishingLengthMsec1 + Instance.FishingDelayMsec1);
-        AddEvent(VibrationPriority.Fishing, Instance.FishingLengthMsec2, Instance.FishingIntensity2, false);
+        TimeSpan timeOffset = new TimeSpan(0,0,0,0, Instance.FishingLengthMsec1 + Instance.FishingDelayMsec1);
+        AddEvent(VibrationPriority.Fishing, timeOffset, Instance.FishingLengthMsec2, Instance.FishingIntensity2, false);
     }
 
     public static void Reset()
     {
-        _debuffActive = false;
         _debuffDuration = 0;
     }
 }

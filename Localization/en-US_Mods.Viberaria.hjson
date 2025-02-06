@@ -12,6 +12,7 @@ Configs: {
 			DebuffVibration: Debuff Vibration
 			FishingVibration: Fishing Vibration Header
 			DebugConfigs: Debugging Tools
+			AmmoUsageVibration: Ammo Usage Vibration Header
 		}
 
 		ViberariaEnabled: {
@@ -126,6 +127,31 @@ Configs: {
 
 		ManaUsageFadeDelayMsec: {
 			Label: Mana Usage Fade Delay Msec
+			Tooltip: How long should a toy stay at the peak strength before fading away.
+		}
+
+		BlastingEnabled: {
+			Label: Blasting Enabled
+			Tooltip: Get vibrations as you shoot around!
+		}
+
+		MaxBlastingIntensity: {
+			Label: Max Blasting Intensity
+			Tooltip: How strong the toy may vibrate. This is applied after the Blasting Intensity Factor is multiplied.
+		}
+
+		BlastingIntensityFactor: {
+			Label: Blasting Intensity Factor
+			Tooltip: How much the vibration strength should be multiplied.
+		}
+
+		BlastingBuildupTimeMsec: {
+			Label: Blasting Buildup Time Msec
+			Tooltip: What period of time should be used to calculate the average ammo per second.
+		}
+
+		BlastingFadeDelayMsec: {
+			Label: Blasting Fade Delay Msec
 			Tooltip: How long should a toy stay at the peak strength before fading away.
 		}
 

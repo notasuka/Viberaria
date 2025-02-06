@@ -5,12 +5,13 @@
 /// </summary>
 public enum VibrationPriority
 {
-    Death = 8,
-    Hurt = 7,
-    Fishing = 6,
-    Potion = 5,
-    Debuff = 4,
-    ManaUsage = 3,
+    Death = 9,
+    Hurt = 8,
+    Fishing = 7,
+    Potion = 6,
+    Debuff = 5,
+    ManaUsage = 4,
+    AmmoUsage = 3,
     DamageDPS = 2,
     HealthPercent = 1
 }

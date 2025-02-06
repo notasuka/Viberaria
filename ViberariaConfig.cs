@@ -168,6 +168,17 @@ public class ViberariaConfig : ModConfig
 
     # endregion Mana Usage config
 
+    # region Ammo Usage config
+    [Header("AmmoUsageVibration")]
+    [DefaultValue(false)] public bool BlastingEnabled;
+    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.8f)] public float MaxBlastingIntensity;
+    [Range(0.01f,3f), Increment(0.01f), DefaultValue(0.25f)] public float BlastingIntensityFactor;
+    [Range(MinTime,60000), Increment(IncrementTime), DefaultValue(2000)] public int BlastingBuildupTimeMsec;
+    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(1000)] public int BlastingFadeDelayMsec;
+
+    # endregion Mana Usage config
+
+
     #region Debuff config
     [Header("DebuffVibration")]
 

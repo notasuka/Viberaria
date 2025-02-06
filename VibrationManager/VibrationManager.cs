@@ -69,9 +69,25 @@ public static class VibrationManager
         // Todo: There might be a crash when locking the list if the intiface server stops while connected. Not
         //  sure what the exact context is...
         //  "NullReferenceException" at Viberaria.VibrationManager.VibrationManager.GetNextEvent(LinkedList`1 eventList)
+        if (eventList == null)
+        {
+            // Funny number to find where in code the error came from.
+            tChat.LogToPlayer("Viberaria: [193853] This will have caused a crash. " +
+                              "Please report the funny number to the developer.", Color.Red);
+            return null;
+        }
+
         while (eventList.First != null)
         {
             VibrationEvent currentEvent = eventList.First.Value;
+            if (currentEvent == null)
+            {
+                // Funny number to find where in code the error came from.
+                tChat.LogToPlayer("Viberaria: [094385] This will have caused a crash. " +
+                                  "Please report the funny number to the developer.", Color.Red);
+                continue;
+            }
+
             if (!currentEvent.HasPassed())
                 return currentEvent;
             eventList.RemoveFirst();

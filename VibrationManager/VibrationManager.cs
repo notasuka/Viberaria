@@ -36,14 +36,17 @@ public static class VibrationManager
     /// <param name="clearOthers">Whether the event should remove all other registered events of its priority.</param>
     public static void AddEvent(VibrationPriority priority, TimeSpan timeOffset, int duration, float strength, bool addToFront, bool clearOthers = false)
     {
-        VibrationEvent vibrationEvent = new(DateTime.Now + timeOffset, duration, strength);
-        if (clearOthers)
-            EventLists[priority].Clear();
-        if (addToFront)
-            EventLists[priority].AddFirst(vibrationEvent);
-        else
-            EventLists[priority].AddLast(vibrationEvent);
-        ProcessEvents();
+        lock (EventLists[priority])
+        {
+            VibrationEvent vibrationEvent = new(DateTime.Now + timeOffset, duration, strength);
+            if (clearOthers)
+                EventLists[priority].Clear();
+            if (addToFront)
+                EventLists[priority].AddFirst(vibrationEvent);
+            else
+                EventLists[priority].AddLast(vibrationEvent);
+            ProcessEvents();
+        }
     }
 
     /// <summary>
@@ -63,9 +66,14 @@ public static class VibrationManager
     /// Clear all events in a priority's event list.
     /// </summary>
     /// <param name="priority">The priority of the event.</param>
-    public static void ClearEvents(VibrationPriority priority)
+    /// /// <param name="update">Whether to update the vibrations after clearing the list.</param>
+    public static void ClearEvents(VibrationPriority priority, bool update = false)
     {
-        EventLists[priority].Clear();
+        lock (EventLists[priority])
+        {
+            EventLists[priority].Clear();
+        }
+        if (update) ProcessEvents();
     }
 
     /// <summary>
@@ -73,12 +81,16 @@ public static class VibrationManager
     /// </summary>
     public static void Halt()
     {
-        foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
-                                     .Cast<VibrationPriority>()
-                                     .OrderByDescending(priority => (int)priority))
+        lock (EventLists)
         {
-            EventLists[priority].Clear();
+            foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
+                         .Cast<VibrationPriority>()
+                         .OrderByDescending(priority => (int)priority))
+            {
+                EventLists[priority].Clear();
+            }
         }
+
         StopVibratingAllDevices();
     }
 
@@ -97,26 +109,47 @@ public static class VibrationManager
             // Funny number to find where in code the error came from.
             tChat.LogToPlayer("Viberaria: [193853] This will have caused a crash. " +
                               "Please report the funny number to the developer.", Color.Red);
+            ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
+                "Viberaria: [193853] This will have caused a crash. " +
+                "Please report the funny number to the developer.");
             return null;
         }
 
-        while (eventList.First != null)
+        lock (eventList)
         {
-            VibrationEvent currentEvent = eventList.First.Value;
-            if (currentEvent == null)
+            while (eventList.First != null)
             {
-                // Funny number to find where in code the error came from.
-                tChat.LogToPlayer("Viberaria: [094385] This will have caused a crash. " +
-                                  "Please report the funny number to the developer.", Color.Red);
-                continue;
+                VibrationEvent currentEvent = eventList.First.Value;
+                if (currentEvent == null)
+                {
+                    // Funny number to find where in code the error came from.
+                    tChat.LogToPlayer("Viberaria: [094385] This will have caused a crash. " +
+                                      "Please report the funny number to the developer.", Color.Red);
+                    ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
+                        "Viberaria: [094385] This will have caused a crash. " +
+                        "Please report the funny number to the developer.");
+                    return null;
+                }
+
+                if (!currentEvent.HasPassed())
+                    return currentEvent;
+                try
+                {
+                    eventList.RemoveFirst();
+                }
+                catch
+                {
+                    tChat.LogToPlayer("Viberaria: [487545] This will have caused a crash. " +
+                                      "Please report the funny number to the developer.", Color.Red);
+                    ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
+                        "Viberaria: [487545] This will have caused a crash. " +
+                        "Please report the funny number to the developer.");
+                    return null;
+                }
             }
 
-            if (!currentEvent.HasPassed())
-                return currentEvent;
-            eventList.RemoveFirst();
+            return null;
         }
-
-        return null;
     }
 
     /// <summary>
@@ -126,6 +159,7 @@ public static class VibrationManager
     {
         bool eventFound = false;
         VibrationEvent soonestEvent = null;
+
         lock (EventCheckerLock)
         {
             foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
@@ -189,7 +223,7 @@ public static class VibrationManager
             // don't print if there is an event planned in the future. The next message will print that instead.
             tChat.LogToPlayer("Iterating Events: No event ongoing! :D", Color.GreenYellow);
 
-        if (_currentEvent.HasPassed())
+        if (_currentEvent == null || _currentEvent.HasPassed())
         {
             StopVibratingAllDevices();
         }
@@ -265,7 +299,9 @@ public static class VibrationManager
         catch (Exception ex)
         {
             // todo
+            //  Haven't gotten this exception in the past month so I suppose it's fine.
             ModContent.GetInstance<Viberaria>().Logger.FatalFormat("UNHANDLED EXCEPTION while trying to vibrate plug(s) on strength `{0}`:\n{1}", strength, ex.StackTrace);
+            tChat.LogToPlayer("Viberaria: Fatal Exception caught. Please share the error (found in client.log) to the developers to help fix the error :D", Color.Red);
         }
     }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.ModLoader;
 using Viberaria.VibrationManager;
 using static Viberaria.bClient;
 using static Viberaria.ViberariaConfig;
@@ -12,17 +13,9 @@ namespace Viberaria;
 
 public static class bVibration
 {
-    private static double _ammoConsumptionRate = 0f;
-    private static readonly object _debuffLock = new();
-    private static float _debuffDuration = 0f;
     private static LinkedList<(DateTime, int)> _manaUsages = new();
     private static LinkedList<DateTime> _ammoUsages = new();
-
-    private static double AmmoConsumptionRate
-    {
-        get => _ammoConsumptionRate;
-        set => _ammoConsumptionRate = value > Instance.HealthMaxIntensity ? Instance.HealthMaxIntensity : value;
-    }
+    private static int expectedDebuffDuration = 0;
 
     private static bool PlayerIsDead => Main.clientPlayer.dead;
 
@@ -91,23 +84,33 @@ public static class bVibration
 
     public static void DebuffVibration(int durationTicks)
     {
+        // Here, durationTicks should be the longest length of time before debuffs
         if(!Instance.ViberariaEnabled ||
            !Instance.DebuffVibrationEnabled ||
            !_client.Connected)
             return;
 
-        lock (_debuffLock)
-        {
-            ClearEvents(VibrationPriority.Debuff);
+        // this function is called every tick, so the highest debuff duration should decrease by 1 every tick.
+        if (expectedDebuffDuration > 0) expectedDebuffDuration--;
 
-            _debuffDuration = durationTicks / 60f; // secs
-            bool setHigh = true; // start with the max intensity
-            for (int loops = 1; Instance.DebuffDelayMsec * loops / 1000f > 0; loops++ )
-            {
-                float strength = setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity;
-                setHigh = !setHigh;
-                AddEvent(VibrationPriority.Debuff, loops * Instance.DebuffDelayMsec, strength, addToFront: false);
-            }
+        if (durationTicks == expectedDebuffDuration)
+            return;
+        expectedDebuffDuration = durationTicks;
+
+        if (durationTicks == 0)
+        {
+            ClearEvents(VibrationPriority.Debuff, update: true);
+            return;
+        }
+
+        ClearEvents(VibrationPriority.Debuff);
+        float debuffDuration = durationTicks / 60f; // secs
+        bool setHigh = true; // start with the max intensity
+        for (int loops = 1; debuffDuration * 1000 - Instance.DebuffDelayMsec * loops > 0; loops++)
+        {
+            float strength = setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity;
+            setHigh = !setHigh;
+            AddEvent(VibrationPriority.Debuff, loops * Instance.DebuffDelayMsec, strength, addToFront: false);
         }
     }
 
@@ -283,6 +286,6 @@ public static class bVibration
 
     public static void Reset()
     {
-        _debuffDuration = 0;
+        expectedDebuffDuration = 0;
     }
 }

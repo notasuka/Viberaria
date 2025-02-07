@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
@@ -14,6 +15,8 @@ namespace Viberaria;
 
 public class tPlayer : ModPlayer
 {
+    private Dictionary<int, int> _activeDebuffsDuration = new();
+
     public override void OnEnterWorld()
     {
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
@@ -65,15 +68,26 @@ public class tPlayer : ModPlayer
         HealthUpdated(Player.statLife, Player.statLifeMax);
     }
 
-    public override void PreUpdateBuffs()
+    public override void PostUpdateBuffs()
     {
         if (Main.myPlayer != Player.whoAmI) return;
+        int debuffsTime = 0;
         foreach (var buffId in DebuffsSelected)
         {
             int index = Player.FindBuffIndex(buffId);
-            if (index != -1)
-                DebuffVibration(Player.buffTime[index]);
+            if (index == -1)
+            {
+                _activeDebuffsDuration[buffId] = 0;
+            }
+            else
+            {
+                _activeDebuffsDuration[buffId] = Player.buffTime[index];
+                if (Player.buffTime[index] > debuffsTime)
+                    debuffsTime = Player.buffTime[index];
+            }
         }
+
+        DebuffVibration(debuffsTime);
     }
 
     public override void PostUpdate()

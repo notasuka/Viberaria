@@ -21,7 +21,7 @@ public class tGlobalItem : GlobalItem
             item.type == ItemID.SuperManaPotion)
         {
             if (Main.myPlayer == player.whoAmI)
-                PotionVibration(item);
+                PotionVibration();
         }
     }
 

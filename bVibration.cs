@@ -52,7 +52,7 @@ public static class bVibration
         float damageStrength;
         if (Instance.StaticDamageVibration)
         {
-            damageStrength = Instance.DamageVibrationIntensity;
+            damageStrength = Instance.StaticDamageVibrationIntensity;
         }
         else
         {
@@ -69,29 +69,19 @@ public static class bVibration
            !_client.Connected)
             return;
 
-        int deathDelay;
-        if (Instance.StaticDeathVibrationLength)
-        {
-            deathDelay = Instance.DeathVibrationDurationMsec;
-        }
-        else
-        {
-            deathDelay = respawnTimer / 60 * 1000; // timer / tickSpeed * (msec in a sec)
-            // respawnTimer is independent of dayRate (daytime speed) thus will always be 60 (afaict)
-        }
-
-        AddEvent(VibrationPriority.Death, deathDelay, Instance.DeathVibrationIntensity, true);
+        Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
     }
 
     public static void DebuffVibration(int durationTicks)
     {
-        // Here, durationTicks should be the longest length of time before debuffs
+        // durationTicks should be length of the player's longest active debuff.
         if(!Instance.ViberariaEnabled ||
            !Instance.DebuffVibrationEnabled ||
            !_client.Connected)
             return;
 
-        // this function is called every tick, so the highest debuff duration should decrease by 1 every tick.
+        // This function is called every tick, so the highest debuff duration should decrease by 1 every tick.
+        // This is to reduce unnecessarily clearing the ongoing debuff vibration events.
         if (expectedDebuffDuration > 0) expectedDebuffDuration--;
 
         if (durationTicks == expectedDebuffDuration)
@@ -116,14 +106,13 @@ public static class bVibration
         }
     }
 
-    public static void PotionVibration(Item item)
+    public static void PotionVibration()
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.PotionUseVibrationEnabled ||
            !_client.Connected)
             return;
-
-        AddEvent(VibrationPriority.Potion, Instance.PotionVibrationDurationMsec, Instance.PotionVibrationIntensity, true);
+        Instance.PotionPattern.PlayPattern(VibrationPriority.Potion);
     }
 
     /// <summary>
@@ -281,9 +270,8 @@ public static class bVibration
             !Instance.FishingVibrationEnabled ||
             !_client.Connected)
             return;
-        AddEvent(VibrationPriority.Fishing, Instance.FishingLengthMsec1, Instance.FishingIntensity1, false);
-        TimeSpan timeOffset = new TimeSpan(0,0,0,0, Instance.FishingLengthMsec1 + Instance.FishingDelayMsec1);
-        AddEvent(VibrationPriority.Fishing, timeOffset, Instance.FishingLengthMsec2, Instance.FishingIntensity2, false);
+
+        Instance.FishingPattern.PlayPattern(VibrationPriority.Fishing);
     }
 
     public static void Instrument(float strength)

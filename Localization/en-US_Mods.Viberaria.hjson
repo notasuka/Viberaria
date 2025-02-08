@@ -56,8 +56,8 @@ Configs: {
 			Tooltip: Whether toys vibrate a single strength or depending on the amount of damage you took
 		}
 
-		DamageVibrationIntensity: {
-			Label: Damage Vibration Intensity
+		StaticDamageVibrationIntensity: {
+			Label: Static Damage Vibration Intensity
 			Tooltip: How strong the toy vibrates when you get hurt, if you toggled 'Static Damage Vibration'
 		}
 
@@ -76,19 +76,9 @@ Configs: {
 			Tooltip: Whether toys vibrate when you die
 		}
 
-		DeathVibrationIntensity: {
-			Label: Death Vibration Intensity
-			Tooltip: How strong the toy vibrates when you die
-		}
-
-		StaticDeathVibrationLength: {
-			Label: Static Death Vibration Length
-			Tooltip: Whether toys vibrate for the given time, or for the entire duration of the respawn timer
-		}
-
-		DeathVibrationDurationMsec: {
-			Label: Death Vibration Duration Msec
-			Tooltip: How long the toy vibrates when you die, if you toggled 'Static Death Vibration Length'
+		DeathPattern: {
+			Label: Death Pattern
+			Tooltip: ""
 		}
 
 		PotionUseVibrationEnabled: {
@@ -96,14 +86,9 @@ Configs: {
 			Tooltip: Whether toys vibrate when you use a health or mana potion
 		}
 
-		PotionVibrationIntensity: {
-			Label: Potion Vibration Intensity
-			Tooltip: How strong the toy vibrates when you take a health/mana potion
-		}
-
-		PotionVibrationDurationMsec: {
-			Label: Potion Vibration Duration Msec
-			Tooltip: How long the toy vibrates when you take a health/mana potion
+		PotionPattern: {
+			Label: Potion Pattern
+			Tooltip: ""
 		}
 
 		ManaUsageVibrationEnabled: {
@@ -158,27 +143,17 @@ Configs: {
 
 		DebuffVibrationEnabled: {
 			Label: Debuff Vibration Enabled
-			Tooltip: Whether toys vibrate when you have a debuff (alternating between two strengths)
+			Tooltip: Whether toys vibrate when you have a debuff (will loop the debuff pattern for the duration of any debuffs).
 		}
 
-		DebuffMaxIntensity: {
-			Label: Debuff Max Intensity
-			Tooltip: How strong the toy vibrates on the upper half of a debuff cycle
-		}
-
-		DebuffMinIntensity: {
-			Label: Debuff Min Intensity
-			Tooltip: How strong the toy vibrates on the lower half of a debuff cycle
-		}
-
-		DebuffDelayMsec: {
-			Label: Debuff Delay Msec
-			Tooltip: How long the pause between debuff Min and Max intensity should be
+		DebuffPattern: {
+			Tooltip: ""
+			Label: Debuff Pattern
 		}
 
 		Debuffs: {
 			Label: Debuffs
-			Tooltip: Configure debug options to get more details when something behaves unexpectedly.
+			Tooltip: Configure the list of debuffs that will trigger the debuff vibration pattern.
 		}
 
 		FishingVibrationEnabled: {
@@ -186,29 +161,9 @@ Configs: {
 			Tooltip: Whether toys vibrate when a fish bites your hook. It gives two vibration pulses.
 		}
 
-		FishingIntensity1: {
-			Label: Fishing Intensity 1
-			Tooltip: The intensity of the first vibration pulse.
-		}
-
-		FishingLengthMsec1: {
-			Label: Fishing Length Msec 1
-			Tooltip: The duration of the first vibration pulse.
-		}
-
-		FishingDelayMsec1: {
-			Label: Fishing Delay Msec
-			Tooltip: The time between the first and second vibration pulse.
-		}
-
-		FishingIntensity2: {
-			Label: Fishing Intensity 2
-			Tooltip: The duration of the second vibration pulse.
-		}
-
-		FishingLengthMsec2: {
-			Label: Fishing Length Msec 2
-			Tooltip: The duration of the second vibration pulse.
+		FishingPattern: {
+			Label: Fishing Pattern
+			Tooltip: ""
 		}
 
 		InstrumentVibrationEnabled: {
@@ -229,11 +184,6 @@ Configs: {
 		Debug: {
 			Tooltip: Configure debug options for when something behaves unexpectedly
 			Label: Debug
-		}
-
-		DebuffPattern: {
-			Tooltip: ""
-			Label: Debuff Pattern
 		}
 	}
 

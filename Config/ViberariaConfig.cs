@@ -138,7 +138,7 @@ public class ViberariaConfig : ModConfig
     [Header("DamageVibration")]
     [DefaultValue(true)] public bool DamageVibrationEnabled;
     [DefaultValue(true)] public bool StaticDamageVibration;
-    [Range(MinIntensity,MaxIntensity)] [Increment(IncrementIntensity)] [DefaultValue(.5f)] public float DamageVibrationIntensity;
+    [Range(MinIntensity,MaxIntensity)] [Increment(IncrementIntensity)] [DefaultValue(.5f)] public float StaticDamageVibrationIntensity;
     [Range(0,10000)] [DefaultValue(0)] public int MinimumDamageForVibration;
     [Range(MinTime,MaxTime)] [Increment(IncrementTime)] [DefaultValue(600)] public int DamageVibrationDurationMsec;
     #endregion
@@ -146,16 +146,23 @@ public class ViberariaConfig : ModConfig
     #region Death config
     [Header("DeathVibration")]
     [DefaultValue(true)] public bool DeathVibrationEnabled;
-    [Range(MinIntensity,MaxIntensity)] [Increment(IncrementIntensity)] [DefaultValue(.7f)] public float DeathVibrationIntensity;
-    [DefaultValue(true)] public bool StaticDeathVibrationLength;
-    [Range(MinTime,MaxTime)] [Increment(IncrementTime)] [DefaultValue(1000)] public int DeathVibrationDurationMsec;
+    [SeparatePage] public VibrationPattern DeathPattern = new()
+    {
+        Pattern = [
+            new VibrationStep { Intensity = 0.7f, Duration = 1000 }
+        ]
+    };
     #endregion
 
     #region Potion Use config
     [Header("PotionUseVibration")]
     [DefaultValue(true)] public bool PotionUseVibrationEnabled;
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.4f)] public float PotionVibrationIntensity;
-    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(400)] public int PotionVibrationDurationMsec;
+    [SeparatePage] public VibrationPattern PotionPattern = new()
+    {
+        Pattern = [
+            new VibrationStep { Intensity = 0.4f, Duration = 400 }
+        ]
+    };
     #endregion
 
     # region Mana Usage config
@@ -178,12 +185,9 @@ public class ViberariaConfig : ModConfig
 
     #region Debuff config
     [Header("DebuffVibration")]
-
     [DefaultValue(true)] public bool DebuffVibrationEnabled;
-
     [SeparatePage] public VibrationPattern DebuffPattern = new()
     {
-        ZerosOverrideLowerPriority = false,
         Pattern = [
             new VibrationStep { Intensity = 0.45f, Duration = 500 },
             new VibrationStep { Intensity = 0.2f, Duration = 500 }
@@ -269,11 +273,15 @@ public class ViberariaConfig : ModConfig
     # region Fishing config
     [Header("FishingVibration")]
     [DefaultValue(true)] public bool FishingVibrationEnabled;
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.30f)] public float FishingIntensity1;
-    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(200)] public int FishingLengthMsec1;
-    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(200)] public int FishingDelayMsec1;
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.30f)] public float FishingIntensity2;
-    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(300)] public int FishingLengthMsec2;
+    [SeparatePage] public VibrationPattern FishingPattern = new()
+    {
+        ZerosOverrideLowerPriority = true,
+        Pattern = [
+            new VibrationStep { Intensity = .30f, Duration = 200 },
+            new VibrationStep { Intensity = .00f, Duration = 200 },
+            new VibrationStep { Intensity = .30f, Duration = 300 }
+        ]
+    };
     # endregion Fishing config
 
     # region Instrument config

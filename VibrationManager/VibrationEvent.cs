@@ -19,6 +19,12 @@ public class VibrationEvent
     public float Strength { get; }
 
     public DateTime EndTime;
+    /// <summary>
+    ///  Whether the event was finished last time <see cref="InFuture()"/> was checked.
+    /// </summary>
+    /// <remarks>This is used by VibrationManager because checking <see cref="InFuture()"/> multiple times can result in the
+    /// output changing as time continues.</remarks>
+    public bool WasFinishedDuringLastCheck;
     private bool _hasFinished;
 
 
@@ -61,11 +67,18 @@ public class VibrationEvent
         return _hasFinished || DateTime.Now >= EndTime;
     }
 
+    /// <summary>
+    /// Check whether the event is in the future and save that value to <see cref="WasFinishedDuringLastCheck"/>.
+    /// </summary>
+    /// <returns>Whether the event is in the future.</returns>
     public bool InFuture()
     {
-        return Timestamp > DateTime.Now;
+        return WasFinishedDuringLastCheck = Timestamp > DateTime.Now;
     }
 
+    /// <summary>
+    /// A helper function to indicate that this vibration event has been executed.
+    /// </summary>
     public void MarkAsFinished()
     {
         _hasFinished = true;

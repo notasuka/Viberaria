@@ -9,11 +9,8 @@ public class VibrationStep
     private const int MinTime = 10;
     private const int MaxTime = 3000;
     private const int IncrementTime = 10;
-    private const float MinIntensity = 0.05f;
-    private const float MaxIntensity = 1f;
-    private const float IncrementIntensity = 0.01f;
 
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.5f)]
+    [Range(0f,1f), Increment(0.01f), DefaultValue(.5f)]
     public float Intensity;
 
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(500)]

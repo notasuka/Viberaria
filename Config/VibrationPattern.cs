@@ -19,7 +19,9 @@ public class VibrationPattern
 
     public override string ToString()
     {
-        return String.Join(", ", Pattern.Select(step => step.ToString()));
+        string truncationEpsilon = Pattern.Count > 3 ? $" + {Pattern.Count-3} more" : "";
+
+        return String.Join(", ", Pattern.Take(3).Select(step => step.ToString())) + truncationEpsilon;
     }
 
     public override bool Equals(object obj) {
@@ -31,6 +33,18 @@ public class VibrationPattern
     public override int GetHashCode()
     {
         return new { ZerosOverrideLowerPriority, Pattern.Count }.GetHashCode();
+    }
+
+    /// <summary>
+    /// Play a vibration pattern. A max duration can be provided to interrupt the pattern when it exceeds a certain duration.
+    /// </summary>
+    /// <param name="priority">The priority of the pattern.</param>
+    /// <param name="maxDuration">An optional maximum length that the pattern may play before being cut short.</param>
+    /// <returns>Whether the pattern was interrupted due to exceeding the <paramref name="maxDuration"/></returns>
+    public bool PlayPattern(VibrationPriority priority, int maxDuration = -1)
+    {
+        TimeSpan stepOffset = TimeSpan.Zero;
+        return PlayPattern(priority, stepOffset, maxDuration);
     }
 
     /// <summary>

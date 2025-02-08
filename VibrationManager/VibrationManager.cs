@@ -45,8 +45,8 @@ public static class VibrationManager
                 EventLists[priority].AddFirst(vibrationEvent);
             else
                 EventLists[priority].AddLast(vibrationEvent);
-            ProcessEvents();
         }
+        Task.Run(async () => await ProcessEvents());
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public static class VibrationManager
         {
             EventLists[priority].Clear();
         }
-        if (update) ProcessEvents();
+        if (update) Task.Run(async () => await ProcessEvents());
     }
 
     /// <summary>
@@ -123,11 +123,11 @@ public static class VibrationManager
                 if (currentEvent == null)
                 {
                     // Funny number to find where in code the error came from.
-                    tChat.LogToPlayer("Viberaria: [094385] This will have caused a crash. " +
-                                      "Please report the funny number to the developer.", Color.Red);
                     ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
                         "Viberaria: [094385] This will have caused a crash. " +
                         "Please report the funny number to the developer.");
+                    tChat.LogToPlayer("Viberaria: [094385] This will have caused a crash. " +
+                                      "Please report the funny number to the developer.", Color.Red);
                     return null;
                 }
 
@@ -139,11 +139,11 @@ public static class VibrationManager
                 }
                 catch
                 {
-                    tChat.LogToPlayer("Viberaria: [487545] This will have caused a crash. " +
-                                      "Please report the funny number to the developer.", Color.Red);
                     ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
                         "Viberaria: [487545] This will have caused a crash. " +
                         "Please report the funny number to the developer.");
+                    tChat.LogToPlayer("Viberaria: [487545] This will have caused a crash. " +
+                                      "Please report the funny number to the developer.", Color.Red);
                     return null;
                 }
             }
@@ -155,7 +155,7 @@ public static class VibrationManager
     /// <summary>
     /// Loop through all priorities and pick the first event of highest priority. Then vibrate toys with this event's strength.
     /// </summary>
-    private static async void ProcessEvents()
+    private static async Task ProcessEvents()
     {
         bool eventFound = false;
         VibrationEvent soonestEvent = null;
@@ -214,12 +214,12 @@ public static class VibrationManager
 
         if (eventFound)
         {
-            VibrateAllDevices(_currentEvent);
+            await VibrateAllDevices(_currentEvent);
             return;
         }
 
         if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages &&
-            !(soonestEvent != null && soonestEvent.InFuture()))
+            !(soonestEvent != null && soonestEvent.WasFinishedDuringLastCheck))
             // don't print if there is an event planned in the future. The next message will print that instead.
             tChat.LogToPlayer("Iterating Events: No event ongoing! :D", Color.GreenYellow);
 
@@ -229,13 +229,14 @@ public static class VibrationManager
         }
 
 
-        if (soonestEvent != null && soonestEvent.InFuture())
+        if (soonestEvent != null && soonestEvent.WasFinishedDuringLastCheck)
         {
-            TimeSpan delayTime = soonestEvent.Timestamp - DateTime.Now;
+            int delayTime = (int)(soonestEvent.Timestamp - DateTime.Now).TotalMilliseconds;
             if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
-                tChat.LogToPlayer($"Iterating Events: Soonest event in {delayTime.TotalMilliseconds} ms! Waiting...", Color.GreenYellow);
+                tChat.LogToPlayer($"Iterating Events: Soonest event in {delayTime} ms! Waiting...", Color.GreenYellow);
+            if (delayTime < 0) delayTime = 0; // prevent waiting for -1 = infinity.
             await Task.Delay(delayTime);
-            ProcessEvents();
+            await ProcessEvents();
         }
     }
 
@@ -244,7 +245,7 @@ public static class VibrationManager
     /// the next up vibration (eg. a lower priority event).
     /// </summary>
     /// <param name="vibrationEvent">The event containing vibration strength and duration.</param>
-    private static async void VibrateAllDevices(VibrationEvent vibrationEvent)
+    private static async Task VibrateAllDevices(VibrationEvent vibrationEvent)
     {
         // Take the ceiling, to ensure the vibration isn't shorter than the event duration.
         int callbackTime = (int)Math.Ceiling((vibrationEvent.EndTime - DateTime.Now).TotalMilliseconds);
@@ -273,7 +274,7 @@ public static class VibrationManager
 
         if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
             tChat.LogToPlayer($"  Event `{vibrationEvent.Strength},{callbackTime}` finished.", Color.GreenYellow);
-        ProcessEvents();
+        await ProcessEvents();
     }
 
     /// <summary>

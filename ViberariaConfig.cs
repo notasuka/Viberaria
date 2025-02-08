@@ -165,7 +165,6 @@ public class ViberariaConfig : ModConfig
     [Range(0.01f,5f), Increment(0.01f), DefaultValue(1f)] public float ManaUsageIntensityFactor;
     [Range(MinTime,60000), Increment(IncrementTime), DefaultValue(2000)] public int ManaUsageBuildupTimeMsec;
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(1000)] public int ManaUsageFadeDelayMsec;
-
     # endregion Mana Usage config
 
     # region Ammo Usage config
@@ -175,9 +174,7 @@ public class ViberariaConfig : ModConfig
     [Range(0.01f,3f), Increment(0.01f), DefaultValue(0.25f)] public float BlastingIntensityFactor;
     [Range(MinTime,60000), Increment(IncrementTime), DefaultValue(2000)] public int BlastingBuildupTimeMsec;
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(1000)] public int BlastingFadeDelayMsec;
-
-    # endregion Mana Usage config
-
+    # endregion Ammo Usage config
 
     #region Debuff config
     [Header("DebuffVibration")]
@@ -273,6 +270,13 @@ public class ViberariaConfig : ModConfig
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(300)] public int FishingLengthMsec2;
     # endregion Fishing config
 
+    # region Instrument config
+    [Header("InstrumentVibration")]
+    [DefaultValue(false)] public bool InstrumentVibrationEnabled;
+    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(1f)] public float InstrumentIntensityFactor;
+    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(750)] public int InstrumentDurationMsec;
+    # endregion Mana Usage config
+
     #region Debug config
     [Header("DebugConfigs")]
     public DebugToolsSubpage Debug = new();
@@ -285,6 +289,7 @@ public class ViberariaConfig : ModConfig
         [DefaultValue(true)] public bool ToyStrengthMessages;
         [DefaultValue(false)] public bool ProcessEventMessages;
         [DefaultValue(false)] public bool ManaAmmoUsageMessages;
+        [DefaultValue(false)] public bool InstrumentMessages;
 
         public override string ToString()
         {
@@ -294,6 +299,7 @@ public class ViberariaConfig : ModConfig
             if (ToyStrengthMessages) enabled.Add("toy");
             if (ProcessEventMessages) enabled.Add("queue");
             if (ManaAmmoUsageMessages) enabled.Add("usage");
+            if (InstrumentMessages) enabled.Add("instrument");
             return string.Join(", ", enabled);
         }
 
@@ -302,13 +308,20 @@ public class ViberariaConfig : ModConfig
                 return Enabled == other.Enabled &&
                 ToyStrengthMessages == other.ToyStrengthMessages &&
                 ProcessEventMessages == other.ProcessEventMessages &&
-                ManaAmmoUsageMessages == other.ManaAmmoUsageMessages;
+                ManaAmmoUsageMessages == other.ManaAmmoUsageMessages &&
+                InstrumentMessages == other.InstrumentMessages;
             // ReSharper disable once BaseObjectEqualsIsObjectEquals
             return base.Equals(obj);
         }
 
         public override int GetHashCode() {
-            return new { Enabled, ToyStrengthMessages, ProcessEventMessages, ManaAmmoUsageMessages }.GetHashCode();
+            return new {
+                Enabled,
+                ToyStrengthMessages,
+                ProcessEventMessages,
+                ManaAmmoUsageMessages,
+                InstrumentMessages
+            }.GetHashCode();
         }
     }
     #endregion Debug config

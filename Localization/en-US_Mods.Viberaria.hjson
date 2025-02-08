@@ -8,11 +8,12 @@ Configs: {
 			DamageVibration: Damage Vibration
 			DeathVibration: Death Vibration
 			PotionUseVibration: Potion Use Vibration
-			ManaUsageVibration: Mana Usage Vibration Header
+			ManaUsageVibration: Mana Usage Vibration
 			DebuffVibration: Debuff Vibration
-			FishingVibration: Fishing Vibration Header
+			FishingVibration: Fishing Vibration
 			DebugConfigs: Debugging Tools
-			AmmoUsageVibration: Ammo Usage Vibration Header
+			AmmoUsageVibration: Ammo Usage Vibration
+			InstrumentVibration: Instrument Vibration
 		}
 
 		ViberariaEnabled: {
@@ -210,6 +211,21 @@ Configs: {
 			Tooltip: The duration of the second vibration pulse.
 		}
 
+		InstrumentVibrationEnabled: {
+			Label: Instrument Vibration Enabled
+			Tooltip: Whether toys should vibrate when someone plays the Rain Song instrument. Use Debug.InstrumentIntensityMessages to see how strong the toy vibrates with a given note.
+		}
+
+		InstrumentIntensityFactor: {
+			Label: Instrument Intensity Factor
+			Tooltip: The maximum strength range of toys when an instrument is played.
+		}
+
+		InstrumentDurationMsec: {
+			Label: Instrument Duration Msec
+			Tooltip: The duration of a single music note vibration.
+		}
+
 		Debug: {
 			Tooltip: Configure debug options for when something behaves unexpectedly
 			Label: Debug
@@ -278,6 +294,11 @@ Configs: {
 		ManaAmmoUsageMessages: {
 			Label: Mana Ammo Usage Messages
 			Tooltip: Whether to send messages in chat when mana- and ammo-consuming items are used.
+		}
+
+		InstrumentMessages: {
+			Label: Instrument Messages
+			Tooltip: Whether to send messages in chat when a music instrument is used.
 		}
 	}
 }

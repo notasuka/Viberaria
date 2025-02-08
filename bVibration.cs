@@ -284,6 +284,20 @@ public static class bVibration
         AddEvent(VibrationPriority.Fishing, timeOffset, Instance.FishingLengthMsec2, Instance.FishingIntensity2, false);
     }
 
+    public static void Instrument(float strength)
+    {
+        if (!Instance.ViberariaEnabled ||
+            !Instance.InstrumentVibrationEnabled ||
+            !_client.Connected)
+            return;
+
+        float multipliedStrength = strength * Instance.InstrumentIntensityFactor;
+        if (Instance.Debug.Enabled && Instance.Debug.InstrumentMessages)
+            tChat.LogToPlayer($"Instrument strength: {multipliedStrength}", Color.LightGoldenrodYellow);
+
+        AddEvent(VibrationPriority.Instrument, Instance.InstrumentDurationMsec, multipliedStrength, true, clearOthers: true);
+    }
+
     public static void Reset()
     {
         expectedDebuffDuration = 0;

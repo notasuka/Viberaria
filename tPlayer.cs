@@ -8,7 +8,7 @@ using Terraria.ModLoader;
 using static Viberaria.bVibration;
 using static Viberaria.VibrationManager.VibrationManager;
 using static Viberaria.bClient;
-using static Viberaria.ViberariaConfig;
+using static Viberaria.Config.ViberariaConfig;
 
 
 namespace Viberaria;

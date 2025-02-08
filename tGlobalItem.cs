@@ -3,9 +3,9 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
-
+using Viberaria.Config;
 using static Viberaria.bVibration;
-using static Viberaria.ViberariaConfig;
+using static Viberaria.Config.ViberariaConfig;
 
 namespace Viberaria;
 

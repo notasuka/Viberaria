@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Chat;
 using Terraria.Localization;
-using static Viberaria.ViberariaConfig;
+using static Viberaria.Config.ViberariaConfig;
 
 namespace Viberaria;
 

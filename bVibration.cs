@@ -4,9 +4,10 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using Viberaria.Config;
 using Viberaria.VibrationManager;
 using static Viberaria.bClient;
-using static Viberaria.ViberariaConfig;
+using static Viberaria.Config.ViberariaConfig;
 using static Viberaria.VibrationManager.VibrationManager;
 
 namespace Viberaria;
@@ -104,13 +105,14 @@ public static class bVibration
         }
 
         ClearEvents(VibrationPriority.Debuff);
-        float debuffDuration = durationTicks / 60f; // secs
-        bool setHigh = true; // start with the max intensity
-        for (int loops = 1; debuffDuration * 1000 - Instance.DebuffDelayMsec * loops > 0; loops++)
+        int durationMsec = (int)(durationTicks / 60.0 * 1000);
+
+        TimeSpan offset = TimeSpan.Zero;
+
+        while (offset.TotalMilliseconds < durationMsec)
         {
-            float strength = setHigh ? Instance.DebuffMaxIntensity : Instance.DebuffMinIntensity;
-            setHigh = !setHigh;
-            AddEvent(VibrationPriority.Debuff, loops * Instance.DebuffDelayMsec, strength, addToFront: false);
+            Instance.DebuffPattern.PlayPattern(VibrationPriority.Debuff, offset, durationMsec);
+            offset += new TimeSpan(0,0,0,0,Instance.DebuffPattern.PatternLength);
         }
     }
 

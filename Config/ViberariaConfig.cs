@@ -9,7 +9,7 @@ using Terraria.ModLoader.Config;
 using static Viberaria.VibrationManager.VibrationManager;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 
-namespace Viberaria;
+namespace Viberaria.Config;
 
 public class ViberariaConfig : ModConfig
 {
@@ -180,9 +180,15 @@ public class ViberariaConfig : ModConfig
     [Header("DebuffVibration")]
 
     [DefaultValue(true)] public bool DebuffVibrationEnabled;
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.45f)] public float DebuffMaxIntensity;
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(.2f)] public float DebuffMinIntensity;
-    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(500)] public int DebuffDelayMsec;
+
+    [SeparatePage] public VibrationPattern DebuffPattern = new()
+    {
+        ZerosOverrideLowerPriority = false,
+        Pattern = [
+            new VibrationStep { Intensity = 0.45f, Duration = 500 },
+            new VibrationStep { Intensity = 0.2f, Duration = 500 }
+        ]
+    };
     public DebuffSubpage Debuffs = new();
 
     [SeparatePage]

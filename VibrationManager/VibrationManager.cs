@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
-using static Viberaria.ViberariaConfig;
+using static Viberaria.Config.ViberariaConfig;
 using static Viberaria.bClient;
 
 namespace Viberaria.VibrationManager;

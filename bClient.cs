@@ -6,7 +6,7 @@ using Buttplug.Client.Connectors.WebsocketConnector;
 using Buttplug.Core;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
-using static Viberaria.ViberariaConfig;
+using static Viberaria.Config.ViberariaConfig;
 
 
 namespace Viberaria;

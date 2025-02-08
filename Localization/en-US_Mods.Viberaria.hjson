@@ -230,6 +230,11 @@ Configs: {
 			Tooltip: Configure debug options for when something behaves unexpectedly
 			Label: Debug
 		}
+
+		DebuffPattern: {
+			Tooltip: ""
+			Label: Debuff Pattern
+		}
 	}
 
 	IntifaceIpSubpage: {
@@ -299,6 +304,35 @@ Configs: {
 		InstrumentMessages: {
 			Label: Instrument Messages
 			Tooltip: Whether to send messages in chat when a music instrument is used.
+		}
+	}
+
+	VibrationPattern: {
+		Headers.VibrationPattern: Edit Vibration Pattern
+		Tooltip: Customize the pattern that plays when this event is triggered.
+
+		Pattern: {
+			Tooltip: The pattern to play when this event is triggered.
+			Label: Pattern
+		}
+
+		ZerosOverrideLowerPriority: {
+			Tooltip: Whether vibrating at `0` should prevent other events from vibrating the toy. Eg: 2 short bleeps with a break inbetween can have the break be filled up with vibrations from a lower priority event.
+			Label: Zeros Override Lower Priority
+		}
+	}
+
+	VibrationStep: {
+		Tooltip: A step in the vibration pattern. After vibration at 'intensity' for 'duration' milliseconds, play the next step in the pattern.
+
+		Duration: {
+			Tooltip: How long a vibration of this intensity should be played before going to the next step.
+			Label: Duration
+		}
+
+		Intensity: {
+			Tooltip: How strong a vibration with the given duration should be.
+			Label: Intensity
 		}
 	}
 }

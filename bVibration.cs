@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ModLoader;
-using Viberaria.Config;
 using Viberaria.VibrationManager;
 using static Viberaria.bClient;
 using static Viberaria.Config.ViberariaConfig;
@@ -68,7 +65,7 @@ public static class bVibration
            !Instance.DeathVibrationEnabled ||
            !_client.Connected)
             return;
-
+        ClearEvents(VibrationPriority.Debuff);
         Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
     }
 

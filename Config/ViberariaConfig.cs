@@ -70,7 +70,7 @@ public class ViberariaConfig : ModConfig
                 if (!Instance.Debuffs.NotifyUnknownBuffsOnLoad) continue;
                 tChat.LogToPlayer("Viberaria: Could not find debuff `" + debuffString + "`. " +
                                   "Make sure the name is correct and reload the world.", Color.Orange);
-                ModContent.GetInstance<Viberaria>().Logger.WarnFormat("Could not find debuff: {0}", debuffString);
+                tChat.Logger.WarnFormat("Could not find debuff: {0}", debuffString);
             }
         }
 
@@ -301,7 +301,7 @@ public class ViberariaConfig : ModConfig
         [Header("DebuggingTools")]
         [DefaultValue(false)] public bool Enabled;
         [DefaultValue(true)] public bool ToyStrengthMessages;
-        [DefaultValue(false)] public bool ProcessEventMessages;
+        [DefaultValue(false)] public bool ProcessEventLogs;
         [DefaultValue(false)] public bool ManaAmmoUsageMessages;
         [DefaultValue(false)] public bool InstrumentMessages;
 
@@ -311,7 +311,7 @@ public class ViberariaConfig : ModConfig
                 return "Disabled";
             List<string> enabled = ["time"];
             if (ToyStrengthMessages) enabled.Add("toy");
-            if (ProcessEventMessages) enabled.Add("queue");
+            if (ProcessEventLogs) enabled.Add("queue");
             if (ManaAmmoUsageMessages) enabled.Add("usage");
             if (InstrumentMessages) enabled.Add("instrument");
             return string.Join(", ", enabled);
@@ -321,7 +321,7 @@ public class ViberariaConfig : ModConfig
             if (obj is DebugToolsSubpage other)
                 return Enabled == other.Enabled &&
                 ToyStrengthMessages == other.ToyStrengthMessages &&
-                ProcessEventMessages == other.ProcessEventMessages &&
+                ProcessEventLogs == other.ProcessEventLogs &&
                 ManaAmmoUsageMessages == other.ManaAmmoUsageMessages &&
                 InstrumentMessages == other.InstrumentMessages;
             // ReSharper disable once BaseObjectEqualsIsObjectEquals
@@ -332,7 +332,7 @@ public class ViberariaConfig : ModConfig
             return new {
                 Enabled,
                 ToyStrengthMessages,
-                ProcessEventMessages,
+                ProcessEventLogs,
                 ManaAmmoUsageMessages,
                 InstrumentMessages
             }.GetHashCode();

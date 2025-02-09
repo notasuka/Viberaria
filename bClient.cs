@@ -51,7 +51,7 @@ public static class bClient
             tChat.LogToPlayer("Viberaria: ConnectorException. Make sure Intiface Central is running. Change the IP " +
                               "in the mod config or toggle 'Viberaria Enable'.",
                 Color.Orange);
-            ModContent.GetInstance<Viberaria>().Logger.WarnFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
+            tChat.Logger.WarnFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
                 ex.GetType(), ex.Message, ex.StackTrace);
             await Task.Delay(4000);
             ClientConnect();
@@ -67,7 +67,7 @@ public static class bClient
             // This is likely because there is already a connection.
             tChat.LogToPlayer($"Viberaria: SocketException. \"{ex.Message}\". You may have to restart your game to " +
                               $"fix this error.", Color.Orange);
-            ModContent.GetInstance<Viberaria>().Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
+            tChat.Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
                 ex.GetType(), ex.Message, ex.StackTrace);
             await Task.Delay(4000);
             ClientConnect();
@@ -76,7 +76,7 @@ public static class bClient
         {
             tChat.LogToPlayer("Viberaria: Likely couldn't connect to Intiface. Make sure you have Intiface Central " +
                               "running on this pc or disable the mod in the mod configuration.", Color.Orange);
-            ModContent.GetInstance<Viberaria>().Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
+            tChat.Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
                 ex.GetType(), ex.Message, ex.StackTrace);
             await Task.Delay(4000);
             ClientConnect();
@@ -98,7 +98,7 @@ public static class bClient
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Viberaria>().Logger.ErrorFormat("Couldn't disconnect from Intiface Client\n{0}: {1}\n{2}",
+            tChat.Logger.ErrorFormat("Couldn't disconnect from Intiface Client\n{0}: {1}\n{2}",
                 ex.GetType(), ex.Message, ex.StackTrace);
         }
     }

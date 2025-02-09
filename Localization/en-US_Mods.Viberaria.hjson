@@ -241,9 +241,9 @@ Configs: {
 			Label: Toy Strength Messages
 		}
 
-		ProcessEventMessages: {
-			Tooltip: Whether to send messages in chat about the VibrationEvent queue.
-			Label: Process Event Messages
+		ProcessEventLogs: {
+			Tooltip: Whether to log info about the VibrationEvent queue in client.log.
+			Label: Process Event Logs
 		}
 
 		ManaAmmoUsageMessages: {

@@ -1,14 +1,18 @@
 using System;
+using log4net;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Chat;
 using Terraria.Localization;
+using Terraria.ModLoader;
 using static Viberaria.Config.ViberariaConfig;
 
 namespace Viberaria;
 
 public static class tChat
 {
+    public static ILog Logger => ModContent.GetInstance<Viberaria>().Logger;
+
     private static NetworkText LiteralText(string msg)
     {
         return NetworkText.FromLiteral(msg);
@@ -29,6 +33,7 @@ public static class tChat
                               (DateTime.Now.Second + DateTime.Now.Millisecond * 0.001f).ToString("00.00");
                 msg = time + "| " + msg;
             }
+
             ChatHelper.SendChatMessageToClient(LiteralText(msg), color, Main.myPlayer);
         }
     }

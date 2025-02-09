@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Terraria.ModLoader;
 using static Viberaria.Config.ViberariaConfig;
 using static Viberaria.bClient;
 
@@ -77,20 +76,26 @@ public static class VibrationManager
     }
 
     /// <summary>
+    /// Clear all events in all event lists.
+    /// </summary>
+    /// /// <param name="update">Whether to update the vibrations after clearing the lists.</param>
+    public static void ClearAllEvents(bool update = false)
+    {
+        foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
+                     .Cast<VibrationPriority>()
+                     .OrderByDescending(priority => (int)priority))
+        {
+            ClearEvents(priority);
+        }
+        if (update) Task.Run(async () => await ProcessEvents());
+    }
+
+    /// <summary>
     /// Remove all vibration events and stop all toys.
     /// </summary>
     public static void Halt()
     {
-        lock (EventLists)
-        {
-            foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
-                         .Cast<VibrationPriority>()
-                         .OrderByDescending(priority => (int)priority))
-            {
-                EventLists[priority].Clear();
-            }
-        }
-
+        ClearAllEvents();
         StopVibratingAllDevices();
     }
 
@@ -109,9 +114,8 @@ public static class VibrationManager
             // Funny number to find where in code the error came from.
             tChat.LogToPlayer("Viberaria: [193853] This will have caused a crash. " +
                               "Please report the funny number to the developer.", Color.Red);
-            ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
-                "Viberaria: [193853] This will have caused a crash. " +
-                "Please report the funny number to the developer.");
+            tChat.Logger.WarnFormat("Viberaria: [193853] This will have caused a crash. " +
+                                    "Please report the funny number to the developer.");
             return null;
         }
 
@@ -123,9 +127,8 @@ public static class VibrationManager
                 if (currentEvent == null)
                 {
                     // Funny number to find where in code the error came from.
-                    ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
-                        "Viberaria: [094385] This will have caused a crash. " +
-                        "Please report the funny number to the developer.");
+                    tChat.Logger.WarnFormat("Viberaria: [094385] This will have caused a crash. " +
+                                            "Please report the funny number to the developer.");
                     tChat.LogToPlayer("Viberaria: [094385] This will have caused a crash. " +
                                       "Please report the funny number to the developer.", Color.Red);
                     return null;
@@ -139,9 +142,8 @@ public static class VibrationManager
                 }
                 catch
                 {
-                    ModContent.GetInstance<Viberaria>().Logger.WarnFormat(
-                        "Viberaria: [487545] This will have caused a crash. " +
-                        "Please report the funny number to the developer.");
+                    tChat.Logger.WarnFormat("Viberaria: [487545] This will have caused a crash. " +
+                                            "Please report the funny number to the developer.");
                     tChat.LogToPlayer("Viberaria: [487545] This will have caused a crash. " +
                                       "Please report the funny number to the developer.", Color.Red);
                     return null;
@@ -160,6 +162,9 @@ public static class VibrationManager
         bool eventFound = false;
         VibrationEvent soonestEvent = null;
 
+        // This section is getting locked because _currentEvent is being changed. Between checking if the local
+        // variable currentEvent is equal to _currentEvent and setting the _currentEvent to the new currentEvent,
+        // another thread could pass the equality comparison with the same event.
         lock (EventCheckerLock)
         {
             foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
@@ -175,13 +180,13 @@ public static class VibrationManager
                 // only vibrate if vibration strength/event changed
                 if (_currentEvent == currentEvent)
                 {
-                    if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+                    if (Instance.Debug.Enabled && Instance.Debug.ProcessEventLogs)
                     {
                         TimeSpan timeLeft = _currentEvent.EndTime - DateTime.Now;
                         double secs = Math.Truncate(timeLeft.TotalSeconds);
                         int nanos = (int)Math.Abs(timeLeft.TotalNanoseconds - secs * 1_000_000_000);
                         string nanosStr = nanos.ToString().PadLeft(9, '0'); // ensure leading zeros
-                        tChat.LogToPlayer($"Iterating Events: Event ongoing ({secs}.{nanosStr} left).", Color.GreenYellow);
+                        tChat.Logger.Info($"Iterating Events: Event ongoing ({secs}.{nanosStr} left).");
                     }
                     return;
                 }
@@ -197,13 +202,13 @@ public static class VibrationManager
                     continue;
                 }
 
-                if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
+                if (Instance.Debug.Enabled && Instance.Debug.ProcessEventLogs)
                 {
-                    tChat.LogToPlayer("Iterating Events: Event found.", Color.GreenYellow);
+                    tChat.Logger.Info("Iterating Events: Event found.");
 
                     double remainingTime = (currentEvent.EndTime - DateTime.Now).TotalMilliseconds;
                     int callbackT = (int)Math.Ceiling(remainingTime);
-                    tChat.LogToPlayer($"dur={currentEvent.Duration}ms;rem={remainingTime}ms;callback={callbackT}ms", Color.YellowGreen);
+                    tChat.Logger.Info($"duration={currentEvent.Duration}ms; remaining={remainingTime}ms; callback={callbackT}ms");
                 }
 
                 eventFound = true;
@@ -211,6 +216,10 @@ public static class VibrationManager
                 break;
             }
         }
+        // The rest is outside the lock / critical section. _currentEvent has been set (or the loop exists without
+        // changing the variable), and the rest are all read operations.
+        // Though perhaps a thread can still modify _currentEvent before VibrateAllDevices() is run. But then it will
+        // just vibrate devices with the new event instead, so that should still be handled well.
 
         if (eventFound)
         {
@@ -218,10 +227,10 @@ public static class VibrationManager
             return;
         }
 
-        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages &&
+        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventLogs &&
             !(soonestEvent != null && soonestEvent.WasFinishedDuringLastCheck))
             // don't print if there is an event planned in the future. The next message will print that instead.
-            tChat.LogToPlayer("Iterating Events: No event ongoing! :D", Color.GreenYellow);
+            tChat.Logger.Info("Iterating Events: No event ongoing! :D");
 
         if (_currentEvent == null || _currentEvent.HasPassed())
         {
@@ -232,8 +241,8 @@ public static class VibrationManager
         if (soonestEvent != null && soonestEvent.WasFinishedDuringLastCheck)
         {
             int delayTime = (int)(soonestEvent.Timestamp - DateTime.Now).TotalMilliseconds;
-            if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
-                tChat.LogToPlayer($"Iterating Events: Soonest event in {delayTime} ms! Waiting...", Color.GreenYellow);
+            if (Instance.Debug.Enabled && Instance.Debug.ProcessEventLogs)
+                tChat.Logger.Info($"Iterating Events: Soonest event in {delayTime} ms! Waiting...");
             if (delayTime < 0) delayTime = 0; // prevent waiting for -1 = infinity.
             await Task.Delay(delayTime);
             await ProcessEvents();
@@ -272,8 +281,8 @@ public static class VibrationManager
         // mark it as finished.
         vibrationEvent.MarkAsFinished();
 
-        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventMessages)
-            tChat.LogToPlayer($"  Event `{vibrationEvent.Strength},{callbackTime}` finished.", Color.GreenYellow);
+        if (Instance.Debug.Enabled && Instance.Debug.ProcessEventLogs)
+            tChat.Logger.Info($"  Event `{vibrationEvent.Strength},{callbackTime}` finished.");
         await ProcessEvents();
     }
 
@@ -292,17 +301,17 @@ public static class VibrationManager
         }
         catch (Buttplug.Core.ButtplugException ex)
         {
+            tChat.Logger.ErrorFormat("Couldn't vibrate plug(s) on strength `{0}`:\n{1}",
+                strength, ex.StackTrace);
             tChat.LogToPlayer($"Error trying to vibrate plug(s) with strength `{strength}`! \"{ex.Message}\"",
                 Color.Red);
-            ModContent.GetInstance<Viberaria>().Logger.ErrorFormat("Couldn't vibrate plug(s) on strength `{0}`:\n{1}",
-                strength, ex.StackTrace);
         }
         catch (Exception ex)
         {
             // todo
             //  Haven't gotten this exception in the past month so I suppose it's fine.
-            ModContent.GetInstance<Viberaria>().Logger.FatalFormat("UNHANDLED EXCEPTION while trying to vibrate plug(s) on strength `{0}`:\n{1}", strength, ex.StackTrace);
-            tChat.LogToPlayer("Viberaria: Fatal Exception caught. Please share the error (found in client.log) to the developers to help fix the error :D", Color.Red);
+            tChat.Logger.FatalFormat("UNHANDLED EXCEPTION while trying to vibrate plug(s) on strength `{0}`:\n{1}", strength, ex.StackTrace);
+            tChat.LogToPlayer("Viberaria: Fatal Exception caught. Please share the error (found in client.log) to the Viberaria developers to help fix the error :D", Color.Red);
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
@@ -34,8 +35,14 @@ public class VibrationStep
 
     [OnDeserialized]
     internal void OnDeserializedMethod(StreamingContext context) {
-        // Range is just a suggestion to the UI. If we want to enforce constraints, we need to validate the data here. Users can edit config files manually with values outside the RangeAttribute, so we fix here if necessary.
-        // Both enforcing ranges and not enforcing ranges have uses in mods. Make sure you fix config values if values outside the range will mess up your mod.
-        Intensity = Terraria.Utils.Clamp(Intensity, 0f, 1f);
+        // From ExampleMod:
+        //   Range is just a suggestion to the UI. If we want to enforce constraints, we need to validate the data here.
+        //    Users can edit config files manually with values outside the RangeAttribute, so we fix here if necessary.
+        //   Both enforcing ranges and not enforcing ranges have uses in mods. Make sure you fix config values if
+        //    values outside the range will mess up your mod.
+        Intensity = Math.Clamp(Intensity, 0f, 1f);
+
+        // Round to 2 decimals. To make it round nicely with the 0.01 increment.
+        Intensity = (float)Math.Round(Intensity, 2);
     }
 }

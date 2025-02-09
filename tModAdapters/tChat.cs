@@ -7,11 +7,11 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using static Viberaria.Config.ViberariaConfig;
 
-namespace Viberaria;
+namespace Viberaria.tModAdapters;
 
 public static class tChat
 {
-    public static ILog Logger => ModContent.GetInstance<Viberaria>().Logger;
+    public static ILog Logger => ModContent.GetInstance<tMod>().Logger;
 
     private static NetworkText LiteralText(string msg)
     {
@@ -25,16 +25,15 @@ public static class tChat
     /// <param name="color">The color the message should have.</param>
     public static void LogToPlayer(string msg, Color color)
     {
-        if (!Main.dedServ)
-        {
-            if (Instance.Debug.Enabled)
-            {
-                string time = DateTime.Now.Minute + ":" +
-                              (DateTime.Now.Second + DateTime.Now.Millisecond * 0.001f).ToString("00.00");
-                msg = time + "| " + msg;
-            }
+        if (Main.dedServ) return;
 
-            ChatHelper.SendChatMessageToClient(LiteralText(msg), color, Main.myPlayer);
+        if (Instance.Debug.Enabled)
+        {
+            string time = DateTime.Now.Minute + ":" +
+                          (DateTime.Now.Second + DateTime.Now.Millisecond * 0.001f).ToString("00.00");
+            msg = time + "| " + msg;
         }
+
+        ChatHelper.SendChatMessageToClient(LiteralText(msg), color, Main.myPlayer);
     }
 }

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Viberaria.tModAdapters;
 using static Viberaria.Config.ViberariaConfig;
-using static Viberaria.bClient;
+using static Viberaria.IntifaceConnection.ClientHandler;
 
 namespace Viberaria.VibrationManager;
 
@@ -294,7 +295,7 @@ public static class VibrationManager
     {
         try
         {
-            foreach (var device in _client.Devices)
+            foreach (var device in Client.Devices)
             {
                 await device.VibrateAsync(strength * Instance.VibratorMaxIntensity);
             }

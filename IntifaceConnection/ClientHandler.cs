@@ -1,19 +1,18 @@
 using System;
 using System.Threading.Tasks;
-
 using Buttplug.Client;
 using Buttplug.Client.Connectors.WebsocketConnector;
 using Buttplug.Core;
-using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
+using Viberaria.tModAdapters;
 using static Viberaria.Config.ViberariaConfig;
 
 
-namespace Viberaria;
+namespace Viberaria.IntifaceConnection;
 
-public static class bClient
+public static class ClientHandler
 {
-    public static readonly ButtplugClient _client = new("Viberaria");
+    public static readonly ButtplugClient Client = new("Viberaria");
     private static ButtplugWebsocketConnector _connector;
     /// <summary>
     /// Indicate whether the mod is intentionally connected with Intiface. If Intiface disconnects while
@@ -26,25 +25,25 @@ public static class bClient
     /// </summary>
     public static void ClientHandles()
     {
-        _client.DeviceAdded += HandleDeviceAdded;
-        _client.DeviceRemoved += HandleDeviceRemoved;
-        _client.ServerDisconnect += HandleServerDisconnect;
+        Client.DeviceAdded += HandleDeviceAdded;
+        Client.DeviceRemoved += HandleDeviceRemoved;
+        Client.ServerDisconnect += HandleServerDisconnect;
     }
 
     public static async void ClientConnect()
     {
-        if (_client.Connected ||
-            (tSystem.tSys != null && !tSystem.tSys.WorldLoaded) ||
+        if (Client.Connected ||
+            (tSystem.Sys != null && !tSystem.Sys.WorldLoaded) ||
             !Instance.ViberariaEnabled)
             return;
 
         try
         {
             _connector = new ButtplugWebsocketConnector(new Uri("ws://" + IntifaceConnectionAddress));
-            await _client.ConnectAsync(_connector);
+            await Client.ConnectAsync(_connector);
             _connected = true;
             tChat.LogToPlayer("Connected to Intiface!", Color.Aqua);
-            await _client.StartScanningAsync();
+            await Client.StartScanningAsync();
         }
         catch (ButtplugClientConnectorException ex)
         {
@@ -91,10 +90,10 @@ public static class bClient
         try
         {
             _connected = false;
-            await _client.DisconnectAsync();
-            _client.DeviceAdded -= HandleDeviceAdded;
-            _client.DeviceRemoved -= HandleDeviceRemoved;
-            _client.ServerDisconnect -= HandleServerDisconnect;
+            await Client.DisconnectAsync();
+            Client.DeviceAdded -= HandleDeviceAdded;
+            Client.DeviceRemoved -= HandleDeviceRemoved;
+            Client.ServerDisconnect -= HandleServerDisconnect;
         }
         catch (Exception ex)
         {

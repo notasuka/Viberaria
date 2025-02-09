@@ -1,10 +1,10 @@
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using Viberaria.IntifaceConnection;
 
-namespace Viberaria;
+namespace Viberaria.tModAdapters;
 
-public class Viberaria : Mod
+public class tMod : Mod
 {
     public override void Load()
     {
@@ -14,7 +14,7 @@ public class Viberaria : Mod
 
     private void OnGuitarPlay(On_Player.orig_PlayGuitarChord orig, Player self, float range)
     {
-        bVibration.Instrument(range);
+        Vibration.Instrument(range);
         orig(self, range);
     }
 }

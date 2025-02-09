@@ -4,10 +4,9 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Viberaria.Config;
-using static Viberaria.bVibration;
-using static Viberaria.Config.ViberariaConfig;
+using static Viberaria.IntifaceConnection.Vibration;
 
-namespace Viberaria;
+namespace Viberaria.tModAdapters;
 
 public class tGlobalItem : GlobalItem
 {

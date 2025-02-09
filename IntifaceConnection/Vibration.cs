@@ -2,18 +2,19 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Viberaria.tModAdapters;
 using Viberaria.VibrationManager;
-using static Viberaria.bClient;
+using static Viberaria.IntifaceConnection.ClientHandler;
 using static Viberaria.Config.ViberariaConfig;
 using static Viberaria.VibrationManager.VibrationManager;
 
-namespace Viberaria;
+namespace Viberaria.IntifaceConnection;
 
-public static class bVibration
+public static class Vibration
 {
-    private static LinkedList<(DateTime, int)> _manaUsages = new();
-    private static LinkedList<DateTime> _ammoUsages = new();
-    private static int expectedDebuffDuration = 0;
+    private static readonly LinkedList<(DateTime, int)> ManaUsages = new();
+    private static readonly LinkedList<DateTime> AmmoUsages = new();
+    private static int _expectedDebuffDuration = 0;
 
     private static bool PlayerIsDead => Main.clientPlayer.dead;
 
@@ -21,7 +22,7 @@ public static class bVibration
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.HealthVibratationScalingEnabled ||
-           !_client.Connected)
+           !Client.Connected)
             return;
 
         if (PlayerIsDead)
@@ -41,7 +42,7 @@ public static class bVibration
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.DamageVibrationEnabled ||
-           !_client.Connected)
+           !Client.Connected)
             return;
 
         if (hurtInfo.Damage < Instance.MinimumDamageForVibration) return;
@@ -63,7 +64,7 @@ public static class bVibration
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.DeathVibrationEnabled ||
-           !_client.Connected)
+           !Client.Connected)
             return;
         ClearEvents(VibrationPriority.Debuff);
         Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
@@ -74,16 +75,16 @@ public static class bVibration
         // durationTicks should be length of the player's longest active debuff.
         if(!Instance.ViberariaEnabled ||
            !Instance.DebuffVibrationEnabled ||
-           !_client.Connected)
+           !Client.Connected)
             return;
 
         // This function is called every tick, so the highest debuff duration should decrease by 1 every tick.
         // This is to reduce unnecessarily clearing the ongoing debuff vibration events.
-        if (expectedDebuffDuration > 0) expectedDebuffDuration--;
+        if (_expectedDebuffDuration > 0) _expectedDebuffDuration--;
 
-        if (durationTicks == expectedDebuffDuration)
+        if (durationTicks == _expectedDebuffDuration)
             return;
-        expectedDebuffDuration = durationTicks;
+        _expectedDebuffDuration = durationTicks;
 
         if (durationTicks == 0)
         {
@@ -107,7 +108,7 @@ public static class bVibration
     {
         if(!Instance.ViberariaEnabled ||
            !Instance.PotionUseVibrationEnabled ||
-           !_client.Connected)
+           !Client.Connected)
             return;
         Instance.PotionPattern.PlayPattern(VibrationPriority.Potion);
     }
@@ -121,12 +122,12 @@ public static class bVibration
     {
         // same function, but without (DateTime, int), since linkedList has a .Count property for this, for efficiency.
         DateTime endTime = DateTime.Now - timespan;
-        while (_ammoUsages.First != null && _ammoUsages.First.Value < endTime)
+        while (AmmoUsages.First != null && AmmoUsages.First.Value < endTime)
         {
-            _ammoUsages.RemoveFirst();
+            AmmoUsages.RemoveFirst();
         }
 
-        return _ammoUsages.Count;
+        return AmmoUsages.Count;
     }
 
     public static void SoIStartedBlasting(Item weapon, Item ammo)
@@ -134,10 +135,10 @@ public static class bVibration
         // This function was largely copied from ManaUsageVibration().
         if (!Instance.ViberariaEnabled ||
             !Instance.BlastingEnabled ||
-            !_client.Connected)
+            !Client.Connected)
             return;
 
-        _ammoUsages.AddLast(DateTime.Now);
+        AmmoUsages.AddLast(DateTime.Now);
 
         TimeSpan timespan = new TimeSpan(ticks: Instance.BlastingBuildupTimeMsec * 10_000);
         // Take the sum of the past BuildupTime seconds of usage, and divide it by the BuildupTime.
@@ -192,13 +193,13 @@ public static class bVibration
     private static int GetManaUsageSum(TimeSpan timespan)
     {
         DateTime endTime = DateTime.Now - timespan;
-        while (_manaUsages.First != null && _manaUsages.First.Value.Item1 < endTime)
+        while (ManaUsages.First != null && ManaUsages.First.Value.Item1 < endTime)
         {
-            _manaUsages.RemoveFirst();
+            ManaUsages.RemoveFirst();
         }
 
         int sum = 0;
-        foreach ((DateTime _, int count) in _manaUsages)
+        foreach ((DateTime _, int count) in ManaUsages)
         {
             sum += count;
         }
@@ -210,11 +211,11 @@ public static class bVibration
     {
         if (!Instance.ViberariaEnabled ||
             !Instance.ManaUsageVibrationEnabled ||
-            !_client.Connected)
+            !Client.Connected)
             return;
         if (player.GetManaCost(item) == 0) return;
 
-        _manaUsages.AddLast((DateTime.Now, player.GetManaCost(item)));
+        ManaUsages.AddLast((DateTime.Now, player.GetManaCost(item)));
 
         TimeSpan timespan = new TimeSpan(ticks: Instance.ManaUsageBuildupTimeMsec * 10_000);
         // Take the sum of the past BuildupTime seconds of usage, and divide it by the BuildupTime.
@@ -265,7 +266,7 @@ public static class bVibration
     {
         if (!Instance.ViberariaEnabled ||
             !Instance.FishingVibrationEnabled ||
-            !_client.Connected)
+            !Client.Connected)
             return;
 
         Instance.FishingPattern.PlayPattern(VibrationPriority.Fishing);
@@ -275,7 +276,7 @@ public static class bVibration
     {
         if (!Instance.ViberariaEnabled ||
             !Instance.InstrumentVibrationEnabled ||
-            !_client.Connected)
+            !Client.Connected)
             return;
 
         float multipliedStrength = strength * Instance.InstrumentIntensityFactor;
@@ -287,6 +288,6 @@ public static class bVibration
 
     public static void Reset()
     {
-        expectedDebuffDuration = 0;
+        _expectedDebuffDuration = 0;
     }
 }

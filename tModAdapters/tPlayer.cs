@@ -2,16 +2,14 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.ID;
 using Terraria.ModLoader;
-
-using static Viberaria.bVibration;
+using static Viberaria.IntifaceConnection.Vibration;
 using static Viberaria.VibrationManager.VibrationManager;
-using static Viberaria.bClient;
+using static Viberaria.IntifaceConnection.ClientHandler;
 using static Viberaria.Config.ViberariaConfig;
 
 
-namespace Viberaria;
+namespace Viberaria.tModAdapters;
 
 public class tPlayer : ModPlayer
 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using Viberaria.tModAdapters;
 
 namespace Viberaria.VibrationManager;
 
@@ -38,7 +39,8 @@ public class VibrationEvent
     {
         if (strength is < 0 or > 1)
         {
-            tChat.LogToPlayer($"Tried to vibrate at a strength outside of 0.0-1.0 ({strength})! Clamping.", Color.Red);
+            if (Config.ViberariaConfig.Instance.Debug.Enabled)
+                tChat.LogToPlayer($"Tried to vibrate at a strength outside of 0.0-1.0 ({strength})! Clamping.", Color.Red);
             strength = Math.Clamp(strength, 0, 1);
         }
 

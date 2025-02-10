@@ -18,7 +18,7 @@ Configs: {
 
 		ViberariaEnabled: {
 			Label: Viberaria Enabled
-			Tooltip: Whether the mod is enabled
+			Tooltip: Whether the mod is enabled.
 		}
 
 		VibratorMaxIntensity: {
@@ -27,53 +27,48 @@ Configs: {
 		}
 
 		IntifaceAddress: {
-			Tooltip: ""
 			Label: Intiface Address
+			Tooltip: ""
 		}
 
 		HealthVibratationScalingEnabled: {
 			Label: Health Vibratation Scaling Enabled
-			Tooltip: Whether toys vibrate based on your current lost health
+			Tooltip: Whether toys vibrate based on your current lost health.
 		}
 
 		HealthMaxIntensity: {
 			Label: Health Max Intensity
-			Tooltip: How strong the toy vibrates when you are nearly out of health
+			Tooltip: How strong the toy vibrates when you are nearly out of health.
 		}
 
 		HealthMinIntensity: {
 			Label: Health Min Intensity
-			Tooltip: How strong the toy vibrates when you have nearly full health
+			Tooltip: How strong the toy vibrates when you have nearly full health.
 		}
 
 		DamageVibrationEnabled: {
 			Label: Damage Vibration Enabled
-			Tooltip: Whether toys should vibrate when you get hurt
+			Tooltip: Whether toys should vibrate when you get hurt.
 		}
 
 		StaticDamageVibration: {
 			Label: Static Damage Vibration
-			Tooltip: Whether toys vibrate a single strength or depending on the amount of damage you took
-		}
-
-		StaticDamageVibrationIntensity: {
-			Label: Static Damage Vibration Intensity
-			Tooltip: How strong the toy vibrates when you get hurt, if you toggled 'Static Damage Vibration'
+			Tooltip: Whether toys vibrate a single strength or depending on the amount of damage you took.
 		}
 
 		MinimumDamageForVibration: {
-			Tooltip: How much damage the player should take before toys vibrate. (Eg. if you don't want "1 damage" to trigger the toy)
 			Label: Minimum Damage For Vibration
+			Tooltip: How much damage the player should take before toys vibrate (Eg. if you don't want "1 damage" to trigger the toy).
 		}
 
-		DamageVibrationDurationMsec: {
-			Label: Damage Vibration Duration Msec
-			Tooltip: How long the toy vibrates when you get hurt
+		DamagePattern: {
+			Label: Damage Pattern
+			Tooltip: ""
 		}
 
 		DeathVibrationEnabled: {
 			Label: Death Vibration Enabled
-			Tooltip: Whether toys vibrate when you die
+			Tooltip: Whether toys vibrate when you die.
 		}
 
 		DeathPattern: {
@@ -83,7 +78,7 @@ Configs: {
 
 		PotionUseVibrationEnabled: {
 			Label: Potion Use Vibration Enabled
-			Tooltip: Whether toys vibrate when you use a health or mana potion
+			Tooltip: Whether toys vibrate when you use a health or mana potion.
 		}
 
 		PotionPattern: {
@@ -147,8 +142,8 @@ Configs: {
 		}
 
 		DebuffPattern: {
-			Tooltip: ""
 			Label: Debuff Pattern
+			Tooltip: ""
 		}
 
 		Debuffs: {
@@ -171,19 +166,14 @@ Configs: {
 			Tooltip: Whether toys should vibrate when someone plays the Rain Song instrument. Use Debug.InstrumentIntensityMessages to see how strong the toy vibrates with a given note.
 		}
 
-		InstrumentIntensityFactor: {
-			Label: Instrument Intensity Factor
-			Tooltip: The maximum strength range of toys when an instrument is played.
-		}
-
-		InstrumentDurationMsec: {
-			Label: Instrument Duration Msec
-			Tooltip: The duration of a single music note vibration.
+		InstrumentPattern: {
+			Label: Instrument Pattern
+			Tooltip: Customize the pattern that plays when someone plays an instrument. The pattern scales with the intensity that the instrument plays.
 		}
 
 		Debug: {
-			Tooltip: Configure debug options for when something behaves unexpectedly
 			Label: Debug
+			Tooltip: Configure debug options for when something behaves unexpectedly
 		}
 	}
 
@@ -192,28 +182,28 @@ Configs: {
 		Tooltip: Configure the Intiface Connection URI
 
 		UseLocalhost: {
-			Tooltip: Whether to use "localhost: 12345" or "192.168.0.0:12345" with the given IP address
 			Label: Use Localhost
+			Tooltip: Whether to use "localhost: 12345" or "192.168.0.0:12345" with the given IP address
 		}
 
 		IntifaceIpAddress: {
-			Tooltip: The address to connect to. Make a list of [192, 168, 0, 0] to connect to 192.168.0.0
 			Label: Intiface Ip Address
+			Tooltip: The address to connect to. Make a list of [192, 168, 0, 0] to connect to 192.168.0.0
 		}
 
 		IntifaceIpPort: {
-			Tooltip: The port to connect to. The default for Intiface is usually 12345
 			Label: Intiface Ip Port
+			Tooltip: The port to connect to. The default for Intiface is usually 12345.
 		}
 	}
 
 	DebuffSubpage: {
-		Tooltip: Configure what debuffs activate debuff vibrations
 		Headers.Debuffs: Debuffs
+		Tooltip: Configure what debuffs activate debuff vibrations.
 
 		NotifyUnknownBuffsOnLoad: {
-			Tooltip: Whether to send a message in chat when you join if any of the aforementioned debuff names were not found.
 			Label: Notify Unknown Buffs On Load
+			Tooltip: Whether to send a message in chat when you join if any of the aforementioned debuff names were not found.
 		}
 
 		DebuffNames: {
@@ -222,8 +212,8 @@ Configs: {
 		}
 
 		ModNameReplacement: {
-			Tooltip: Replace a mod's debuff prefix with another (shorter) version.
 			Label: Mod Name Replacement
+			Tooltip: Replace a mod's debuff prefix with another (shorter) version.
 		}
 	}
 
@@ -232,18 +222,18 @@ Configs: {
 		Tooltip: ""
 
 		Enabled: {
-			Tooltip: Whether to show debugging messages in chat. Also adds "mm.ss.ff|" timestamps to debug messages
 			Label: Enabled
+			Tooltip: Whether to show debugging messages in chat. Also adds "mm.ss.ff|" timestamps to debug messages.
 		}
 
 		ToyStrengthMessages: {
-			Tooltip: Whether to send messages in chat when the strength of toys is modified.
 			Label: Toy Strength Messages
+			Tooltip: Whether to send messages in chat when the strength of toys is modified.
 		}
 
 		ProcessEventLogs: {
-			Tooltip: Whether to log info about the VibrationEvent queue in client.log.
 			Label: Process Event Logs
+			Tooltip: Whether to log info about the VibrationEvent queue in client.log.
 		}
 
 		ManaAmmoUsageMessages: {
@@ -262,13 +252,13 @@ Configs: {
 		Tooltip: Customize the pattern that plays when this event is triggered.
 
 		Pattern: {
-			Tooltip: The pattern to play when this event is triggered.
 			Label: Pattern
+			Tooltip: The pattern to play when this event is triggered.
 		}
 
 		ZerosOverrideLowerPriority: {
-			Tooltip: Whether vibrating at `0` should prevent other events from vibrating the toy. Eg: 2 short bleeps with a break inbetween can have the break be filled up with vibrations from a lower priority event.
 			Label: Zeros Override Lower Priority
+			Tooltip: Whether vibrating at `0` should prevent other events from vibrating the toy. Eg: 2 short bleeps with a break inbetween can have the break be filled up with vibrations from a lower priority event.
 		}
 	}
 
@@ -276,13 +266,13 @@ Configs: {
 		Tooltip: A step in the vibration pattern. After vibration at 'intensity' for 'duration' milliseconds, play the next step in the pattern.
 
 		Duration: {
-			Tooltip: How long a vibration of this intensity should be played before going to the next step.
 			Label: Duration
+			Tooltip: How long a vibration of this intensity should be played before going to the next step.
 		}
 
 		Intensity: {
-			Tooltip: How strong a vibration with the given duration should be.
 			Label: Intensity
+			Tooltip: How strong a vibration with the given duration should be.
 		}
 	}
 }

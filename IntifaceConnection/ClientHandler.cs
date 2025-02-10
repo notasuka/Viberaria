@@ -20,6 +20,8 @@ public static class ClientHandler
     /// </summary>
     private static bool _connected = false;
 
+    private static bool _attemptingConnection = false;
+
     /// <summary>
     /// Subscribe to intiface events.
     /// </summary>
@@ -32,60 +34,71 @@ public static class ClientHandler
 
     public static async void ClientConnect()
     {
-        if (Client.Connected ||
-            (tSystem.Sys != null && !tSystem.Sys.WorldLoaded) ||
-            !Instance.ViberariaEnabled)
-            return;
+        if (_attemptingConnection) return;
+        // to prevent ClientConnect() being called multiple times at the same time.
+        _attemptingConnection = true;
+        // Using a while loop instead of recursively calling ClientConnect after a Task.Delay()
 
-        try
+        while (!Client.Connected &&
+               tSystem.Sys != null && tSystem.Sys.WorldLoaded &&
+               Instance.ViberariaEnabled)
         {
-            _connector = new ButtplugWebsocketConnector(new Uri("ws://" + IntifaceConnectionAddress));
-            await Client.ConnectAsync(_connector);
-            _connected = true;
-            tChat.LogToPlayer("Connected to Intiface!", Color.Aqua);
-            await Client.StartScanningAsync();
+            try
+            {
+                _connector = new ButtplugWebsocketConnector(new Uri("ws://" + IntifaceConnectionAddress));
+                await Client.ConnectAsync(_connector);
+                _connected = true;
+                _attemptingConnection = false;
+                tChat.LogToPlayer("Connected to Intiface!", Color.Aqua);
+                ClientHandles();
+                await Client.StartScanningAsync();
+            }
+            catch (ButtplugClientConnectorException ex)
+            {
+                tChat.LogToPlayer(
+                    "Viberaria: ConnectorException. Make sure Intiface Central is running. Change the IP " +
+                    "in the mod config or toggle 'Viberaria Enable'.",
+                    Color.Orange);
+                tChat.Logger.WarnFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
+                    ex.GetType(), ex.Message, ex.StackTrace);
+                await Task.Delay(4000);
+            }
+            catch (ButtplugHandshakeException ex)
+            {
+                tChat.LogToPlayer($"Viberaria: HandshakeException. \"{ex.Message}\". Rejoin the world to retry.",
+                    Color.Orange);
+                break;
+                // Don't attempt to reconnect.
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                // This is likely because there is already a connection.
+                tChat.LogToPlayer(
+                    $"Viberaria: SocketException. \"{ex.Message}\". You may have to restart your game to " +
+                    $"fix this error.", Color.Orange);
+                tChat.Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
+                    ex.GetType(), ex.Message, ex.StackTrace);
+                await Task.Delay(4000);
+            }
+            catch (Exception ex) // Generic error logging just in case..
+            {
+                tChat.LogToPlayer(
+                    "Viberaria: Likely couldn't connect to Intiface. Make sure you have Intiface Central " +
+                    "running on this pc or disable the mod in the mod configuration.", Color.Orange);
+                tChat.Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
+                    ex.GetType(), ex.Message, ex.StackTrace);
+                await Task.Delay(4000);
+            }
+
         }
-        catch (ButtplugClientConnectorException ex)
-        {
-            tChat.LogToPlayer("Viberaria: ConnectorException. Make sure Intiface Central is running. Change the IP " +
-                              "in the mod config or toggle 'Viberaria Enable'.",
-                Color.Orange);
-            tChat.Logger.WarnFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
-                ex.GetType(), ex.Message, ex.StackTrace);
-            await Task.Delay(4000);
-            ClientConnect();
-        }
-        catch (ButtplugHandshakeException ex)
-        {
-            tChat.LogToPlayer($"Viberaria: HandshakeException. \"{ex.Message}\". Rejoin the world to retry.",
-                Color.Orange);
-            // Don't attempt to reconnect.
-        }
-        catch (System.Net.Sockets.SocketException ex)
-        {
-            // This is likely because there is already a connection.
-            tChat.LogToPlayer($"Viberaria: SocketException. \"{ex.Message}\". You may have to restart your game to " +
-                              $"fix this error.", Color.Orange);
-            tChat.Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
-                ex.GetType(), ex.Message, ex.StackTrace);
-            await Task.Delay(4000);
-            ClientConnect();
-        }
-        catch (Exception ex)  // Generic error logging just in case..
-        {
-            tChat.LogToPlayer("Viberaria: Likely couldn't connect to Intiface. Make sure you have Intiface Central " +
-                              "running on this pc or disable the mod in the mod configuration.", Color.Orange);
-            tChat.Logger.ErrorFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
-                ex.GetType(), ex.Message, ex.StackTrace);
-            await Task.Delay(4000);
-            ClientConnect();
-        }
+
+        _attemptingConnection = false;
     }
 
     /// <summary>
     /// Handle disconnecting from Intiface Central and unsubscribing from its events.
     /// </summary>
-    public static async void ClientRemoveHandles()
+    public static async void ClientDisconnect()
     {
         try
         {

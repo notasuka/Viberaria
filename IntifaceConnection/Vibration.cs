@@ -47,17 +47,10 @@ public static class Vibration
 
         if (hurtInfo.Damage < Instance.MinimumDamageForVibration) return;
 
-        float damageStrength;
-        if (Instance.StaticDamageVibration)
-        {
-            damageStrength = Instance.StaticDamageVibrationIntensity;
-        }
-        else
-        {
-            damageStrength = hurtInfo.Damage / (float)maxHp;
-        }
-
-        AddEvent(VibrationPriority.Hurt, Instance.DamageVibrationDurationMsec, damageStrength, true);
+        float damageFactor = Instance.StaticDamageVibration ? 1f : hurtInfo.Damage / (float)maxHp;
+        // clear ongoing hurt vibrations so the upcoming damage event is played immediately
+        ClearEvents(VibrationPriority.Hurt);
+        Instance.DamagePattern.PlayPattern(VibrationPriority.Hurt, damageFactor);
     }
 
     public static void Died(int respawnTimer)
@@ -279,11 +272,13 @@ public static class Vibration
             !Client.Connected)
             return;
 
-        float multipliedStrength = strength * Instance.InstrumentIntensityFactor;
+        // In case people aren't sure how strong they are making their (or other's) toys vibrate.
         if (Instance.Debug.Enabled && Instance.Debug.InstrumentMessages)
-            tChat.LogToPlayer($"Instrument strength: {multipliedStrength}", Color.LightGoldenrodYellow);
+            tChat.LogToPlayer($"Instrument strength: {strength}", Color.LightGoldenrodYellow);
 
-        AddEvent(VibrationPriority.Instrument, Instance.InstrumentDurationMsec, multipliedStrength, true, clearOthers: true);
+        // remove ongoing events, so the new strength plays as soon as the instrument is played
+        ClearEvents(VibrationPriority.Instrument);
+        Instance.FishingPattern.PlayPattern(VibrationPriority.Instrument, intensityFactor: strength);
     }
 
     public static void Reset()

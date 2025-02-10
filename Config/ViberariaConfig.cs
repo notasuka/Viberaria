@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Serialization;
 using Microsoft.Xna.Framework;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -83,7 +84,31 @@ public class ViberariaConfig : ModConfig
     {
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
         Halt();
-        ClientHandler.ClientConnect();
+        if (Instance.ViberariaEnabled)
+            ClientHandler.ClientConnect();
+        else
+            ClientHandler.ClientDisconnect();
+    }
+
+    private static float ClampAndRound(float value)
+    {
+        return Math.Clamp(MathF.Round(value, 2), 0f, 1f);
+    }
+
+    [OnDeserialized]
+    internal void OnDeserializedMethod(StreamingContext context) {
+        // From ExampleMod:
+        //   Range is just a suggestion to the UI. If we want to enforce constraints, we need to validate the data here.
+        //    Users can edit config files manually with values outside the RangeAttribute, so we fix here if necessary.
+        //   Both enforcing ranges and not enforcing ranges have uses in mods. Make sure you fix config values if
+        //    values outside the range will mess up your mod.
+
+        HealthMaxIntensity = ClampAndRound(HealthMaxIntensity);
+        HealthMinIntensity = ClampAndRound(HealthMinIntensity);
+        MaxManaUsageIntensity = ClampAndRound(MaxManaUsageIntensity);
+        ManaUsageIntensityFactor = ClampAndRound(ManaUsageIntensityFactor);
+        MaxBlastingIntensity = ClampAndRound(MaxBlastingIntensity);
+        BlastingIntensityFactor = ClampAndRound(BlastingIntensityFactor);
     }
     #endregion
 
@@ -139,10 +164,14 @@ public class ViberariaConfig : ModConfig
     #region Damage config
     [Header("DamageVibration")]
     [DefaultValue(true)] public bool DamageVibrationEnabled;
+    [SeparatePage] public VibrationPattern DamagePattern = new()
+    {
+        Pattern = [
+            new VibrationStep { Intensity = 0.5f, Duration = 600 }
+        ]
+    };
     [DefaultValue(true)] public bool StaticDamageVibration;
-    [Range(MinIntensity,MaxIntensity)] [Increment(IncrementIntensity)] [DefaultValue(.5f)] public float StaticDamageVibrationIntensity;
     [Range(0,10000)] [DefaultValue(0)] public int MinimumDamageForVibration;
-    [Range(MinTime,MaxTime)] [Increment(IncrementTime)] [DefaultValue(600)] public int DamageVibrationDurationMsec;
     #endregion
 
     #region Death config
@@ -289,9 +318,13 @@ public class ViberariaConfig : ModConfig
     # region Instrument config
     [Header("InstrumentVibration")]
     [DefaultValue(false)] public bool InstrumentVibrationEnabled;
-    [Range(MinIntensity,MaxIntensity), Increment(IncrementIntensity), DefaultValue(1f)] public float InstrumentIntensityFactor;
-    [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(750)] public int InstrumentDurationMsec;
-    # endregion Mana Usage config
+    [SeparatePage] public VibrationPattern InstrumentPattern = new()
+    {
+        Pattern = [
+            new VibrationStep { Intensity = 1f, Duration = 750 }
+        ]
+    };
+    # endregion Instrument config
 
     #region Debug config
     [Header("DebugConfigs")]

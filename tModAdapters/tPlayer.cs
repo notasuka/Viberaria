@@ -17,15 +17,13 @@ public class tPlayer : ModPlayer
 
     public override void OnEnterWorld()
     {
+        if (Main.myPlayer != Player.whoAmI) return;
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
         ClientConnect();
     }
 
-    public override void Load()
-        => ClientHandles();
-
     public override void Unload()
-        => ClientRemoveHandles();
+        => ClientDisconnect();
 
     public override void NaturalLifeRegen(ref float regen)
     {

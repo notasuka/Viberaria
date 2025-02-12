@@ -92,7 +92,7 @@ public static class Vibration
 
         while (offset.TotalMilliseconds < durationMsec)
         {
-            Instance.DebuffPattern.PlayPattern(VibrationPriority.Debuff, offset, durationMsec);
+            Instance.DebuffPattern.PlayPattern(VibrationPriority.Debuff, offset, maxDuration: durationMsec);
             offset += new TimeSpan(0,0,0,0,Instance.DebuffPattern.PatternLength);
         }
     }

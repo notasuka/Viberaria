@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Terraria.ModLoader.Config;
+using Viberaria.tModAdapters;
 using Viberaria.VibrationManager;
 using static Viberaria.VibrationManager.VibrationManager;
 
@@ -82,5 +84,12 @@ public class VibrationPattern
             stepOffset += new TimeSpan(0, 0, 0, 0, step.Duration);
         }
         return false;
+    }
+
+    [OnDeserialized]
+    internal void OnDeserializedMethod(StreamingContext context) {
+        // Ensure a pattern is never 0 steps long, as that would break PlayPattern.
+        if (Pattern.Count == 0)
+            Pattern.Add(new VibrationStep { Intensity = 0.05f, Duration = 100 });
     }
 }

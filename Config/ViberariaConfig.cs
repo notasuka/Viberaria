@@ -53,7 +53,7 @@ public class ViberariaConfig : ModConfig
         foreach (ModBuff buff in ModContent.GetContent<ModBuff>())
         {
             string modName = buff.Mod.Name;
-            if(Instance.Debuffs.ModNameReplacement.TryGetValue(modName, out string replacement))
+            if (Instance.Debuffs.ModNameReplacement.TryGetValue(modName, out string replacement))
                 modName = replacement;
             modBuffs.Add(modName + "." + buff.Name, buff.Type);
         }
@@ -71,18 +71,75 @@ public class ViberariaConfig : ModConfig
             else
             {
                 if (!Instance.Debuffs.NotifyUnknownBuffsOnLoad) continue;
+                tChat.Logger.WarnFormat("Could not find debuff: {0}", debuffString);
                 tChat.LogToPlayer("Viberaria: Could not find debuff `" + debuffString + "`. " +
                                   "Make sure the name is correct and reload the world.", Color.Orange);
-                tChat.Logger.WarnFormat("Could not find debuff: {0}", debuffString);
             }
         }
 
         return debuffs.ToArray();
     }
 
+    public static int[] FindModInstruments(List<string> instrumentStrings)  // public so it can be called in tPlayer.OnWorldLoad if buffs are not found.
+    {
+        List<int> instruments = new();
+        Dictionary<String, int> modItems = new();
+
+        foreach (ModItem item in ModContent.GetContent<ModItem>())
+        {
+            string modName = item.Mod.Name;
+            if (Instance.Instruments.ModNameReplacement.TryGetValue(modName, out string replacement))
+                modName = replacement;
+            modItems.Add(modName + "." + item.Name, item.Type);
+        }
+
+        foreach (string instrumentString in instrumentStrings)
+        {
+            if (ItemID.Search.TryGetId(instrumentString, out int instrumentId) ||  // search Vanilla (de)buffs by Name
+                modItems.TryGetValue(instrumentString, out instrumentId) ||        // search Mod (de)buffs by Name
+                Int32.TryParse(instrumentString, out instrumentId) && (            // Convert name to int
+                    ItemID.Search.ContainsId(instrumentId) ||                  // search Vanilla (de)buffs by ID
+                    modItems.ContainsValue(instrumentId)))                     // search Mod (de)buffs by ID (Type)
+            {
+                instruments.Add(instrumentId);
+            }
+            else
+            {
+                if (!Instance.Instruments.NotifyUnknownInstrumentsOnLoad) continue;
+                tChat.Logger.WarnFormat("Could not find item: {0}", instrumentString);
+                tChat.LogToPlayer("Viberaria: Could not find item `" + instrumentString + "`. " +
+                                  "Make sure the name is correct and reload the world.", Color.Orange);
+            }
+        }
+
+        return instruments.ToArray();
+    }
+
+    private static void PrintDebuffsToLog()
+    {
+        List<string> modBuffs = new();
+
+        foreach (ModBuff buff in ModContent.GetContent<ModBuff>())
+        {
+            string modName = buff.Mod.Name;
+            if (Instance.Debuffs.ModNameReplacement.TryGetValue(modName, out string replacement))
+                modName = replacement;
+            modBuffs.Add($"{modName}.{buff.Name}, {buff.Type}");
+        }
+
+        tChat.Logger.Info("Printing all Debuffs to log:\n  " + String.Join("\n  ", modBuffs));
+    }
+
     public override void OnChanged()
     {
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
+        if (Instance.Debuffs.PrintAllDebuffsToLog)
+        {
+            PrintDebuffsToLog();
+            tChat.LogToPlayer("Printed debuffs to log successfully.", Color.Green);
+            Instance.Debuffs.PrintAllDebuffsToLog = false;
+        }
+
         Halt();
         if (Instance.ViberariaEnabled)
             ClientHandler.ClientConnect();
@@ -231,8 +288,8 @@ public class ViberariaConfig : ModConfig
     {
         [Header("Debuffs")]
         [DefaultValue(false)] public bool NotifyUnknownBuffsOnLoad;
-        public List<string> DebuffNames = new()
-        {
+        [DefaultValue(false)] public bool PrintAllDebuffsToLog;
+        public List<string> DebuffNames = [
             "Poisoned",
             "Darkness",
             "OnFire",
@@ -247,20 +304,20 @@ public class ViberariaConfig : ModConfig
             "Frostburn",
             "Chilled",
             "Frozen",
-            "Burning",  // Stepping on hot blocks
-            "Suffocation",  // In gravity blocks or in water
+            "Burning", // Stepping on hot blocks
+            "Suffocation", // In gravity blocks or in water
             "Venom",
-            "Blackout",  // a stronger version of 'Darkness'
-            "Wet",  // When you get shot by a water gun
-            "Slimed",  // When you get shot by a slime gun
+            "Blackout", // a stronger version of 'Darkness'
+            "Wet", // When you get shot by a water gun
+            "Slimed", // When you get shot by a slime gun
             "Electrified",
             "ShadowFlame",
             "Stoned",
             "Dazed",
-            "Obstructed",  // A stronger version of 'Blackout'
-            "VortexDebuff",  // Distorted
-            "OnFire3",  // Hellfire
-            "Frostburn2",  // Frostburn
+            "Obstructed", // A stronger version of 'Blackout'
+            "VortexDebuff", // Distorted
+            "OnFire3", // Hellfire
+            "Frostburn2", // Frostburn
             "Starving",
             "CM.Nightwither",
             "CM.CrushDepth",
@@ -275,7 +332,7 @@ public class ViberariaConfig : ModConfig
             "CM.GodSlayerInferno",
             "CM.HolyFlames",
             "CM.VulnerabilityHex"
-        };
+        ];
 
         public Dictionary<string, string> ModNameReplacement = new() { { "CalamityMod", "CM" } };
 
@@ -290,13 +347,14 @@ public class ViberariaConfig : ModConfig
             if (obj is DebuffSubpage other)
                 return DebuffNames == other.DebuffNames &&
                        ModNameReplacement == other.ModNameReplacement &&
-                       NotifyUnknownBuffsOnLoad == other.NotifyUnknownBuffsOnLoad;
+                       NotifyUnknownBuffsOnLoad == other.NotifyUnknownBuffsOnLoad &&
+                       PrintAllDebuffsToLog == other.PrintAllDebuffsToLog;
             // ReSharper disable once BaseObjectEqualsIsObjectEquals
             return base.Equals(obj);
         }
 
         public override int GetHashCode() {
-            return new { DebuffNames, ModNameReplacement, NotifyUnknownBuffsOnLoad }.GetHashCode();
+            return new { DebuffNames, ModNameReplacement, NotifyUnknownBuffsOnLoad, PrintAllDebuffsToLog }.GetHashCode();
         }
     }
     #endregion
@@ -324,6 +382,40 @@ public class ViberariaConfig : ModConfig
             new VibrationStep { Intensity = 1f, Duration = 750 }
         ]
     };
+    public InstrumentsSubpage Instruments = new();
+
+    [SeparatePage]
+    public class InstrumentsSubpage
+    {
+        [Header("Debuffs")]
+        [DefaultValue(false)] public bool NotifyUnknownInstrumentsOnLoad;
+        [DefaultValue(false)] public bool PrintInstrumentsToChatWhenUsed;
+        public List<string> InstrumentNames = ["Rain Song"];
+
+        public Dictionary<string, string> ModNameReplacement = new() { { "CalamityMod", "CM" } };
+
+        public override string ToString()
+        {
+            return InstrumentNames.Count + " selected";
+        }
+
+        // "Implementing Equals and GetHashCode are critical for any classes you use."
+        //   - tModLoader/CustomDataTypes/Pair
+        public override bool Equals(object obj) {
+            if (obj is InstrumentsSubpage other)
+                return InstrumentNames == other.InstrumentNames &&
+                       ModNameReplacement == other.ModNameReplacement &&
+                       NotifyUnknownInstrumentsOnLoad == other.NotifyUnknownInstrumentsOnLoad &&
+                       PrintInstrumentsToChatWhenUsed == other.PrintInstrumentsToChatWhenUsed;
+            // ReSharper disable once BaseObjectEqualsIsObjectEquals
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return new { InstrumentNames, ModNameReplacement, NotifyUnknownInstrumentsOnLoad, PrintAllInstrumentsToLog = PrintInstrumentsToChatWhenUsed }.GetHashCode();
+        }
+    }
     # endregion Instrument config
 
     #region Debug config

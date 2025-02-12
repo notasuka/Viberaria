@@ -173,7 +173,12 @@ Configs: {
 
 		Debug: {
 			Label: Debug
-			Tooltip: Configure debug options for when something behaves unexpectedly
+			Tooltip: Configure debug options for when something behaves unexpectedly.
+		}
+
+		Instruments: {
+			Label: Instruments
+			Tooltip: Modify what instruments trigger toy vibrations.
 		}
 	}
 
@@ -214,6 +219,11 @@ Configs: {
 		ModNameReplacement: {
 			Label: Mod Name Replacement
 			Tooltip: Replace a mod's debuff prefix with another (shorter) version.
+		}
+
+		PrintAllDebuffsToLog: {
+			Label: Print All Debuffs To Log
+			Tooltip: After enabling, all known debuffs will be printed to the log file. Useful if you want to add custom modded debuffs to this list :D
 		}
 	}
 
@@ -273,6 +283,31 @@ Configs: {
 		Intensity: {
 			Label: Intensity
 			Tooltip: How strong a vibration with the given duration should be.
+		}
+	}
+
+	InstrumentsSubpage: {
+		Tooltip: ""
+		Headers.Debuffs: Debuffs Header
+
+		NotifyUnknownInstrumentsOnLoad: {
+			Label: Notify Unknown Instruments On Load
+			Tooltip: Whether to send a message in chat when you join if any of the aforementioned instrument names were not found.
+		}
+
+		PrintInstrumentsToChatWhenUsed: {
+			Label: Print Instruments To Chat When Used
+			Tooltip: Whether to send a message in chat when a supported instrument is being used. Useful if you're not sure what instrument name to add to the list
+		}
+
+		InstrumentNames: {
+			Label: Instrument Names
+			Tooltip: A list of instrument names that will vibrate toys when they are played.
+		}
+
+		ModNameReplacement: {
+			Label: Mod Name Replacement
+			Tooltip: Replace a mod's instrument prefix with another (shorter) version.
 		}
 	}
 }

@@ -19,8 +19,8 @@ public static class ClientHandler
     /// this variable is true, it tries to reconnect.
     /// </summary>
     private static bool _connected = false;
-
     private static bool _attemptingConnection = false;
+    private static int _attempts = 0;
 
     /// <summary>
     /// Subscribe to intiface events.
@@ -34,15 +34,19 @@ public static class ClientHandler
 
     public static async void ClientConnect()
     {
+        _attempts = 0; // reset counter so it continues trying if you
         if (_attemptingConnection) return;
         // to prevent ClientConnect() being called multiple times at the same time.
         _attemptingConnection = true;
         // Using a while loop instead of recursively calling ClientConnect after a Task.Delay()
 
+
         while (!Client.Connected &&
                tSystem.Sys != null && tSystem.Sys.WorldLoaded &&
-               Instance.ViberariaEnabled)
+               Instance.ViberariaEnabled &&
+               _attempts < 3)
         {
+            _attempts++;
             try
             {
                 _connector = new ButtplugWebsocketConnector(new Uri("ws://" + IntifaceConnectionAddress));
@@ -57,7 +61,7 @@ public static class ClientHandler
             {
                 tChat.LogToPlayer(
                     "Viberaria: ConnectorException. Make sure Intiface Central is running. Change the IP " +
-                    "in the mod config or toggle 'Viberaria Enable'.",
+                    $"in the mod config or toggle 'Viberaria Enable'. ({3-_attempts} more attempt{(3-_attempts == 1 ? "" : "s")})",
                     Color.Orange);
                 tChat.Logger.WarnFormat("Couldn't connect to Intiface Client\n{0}: {1}\n{2}",
                     ex.GetType(), ex.Message, ex.StackTrace);
@@ -90,6 +94,13 @@ public static class ClientHandler
                 await Task.Delay(4000);
             }
 
+        }
+
+        if (_attempts == 3)
+        {
+            tChat.LogToPlayer(
+                "Viberaria: To retry the viberaria connection, make any change to Viberaria's Mod Configuration, or rejoin the world.",
+                Color.Orange);
         }
 
         _attemptingConnection = false;

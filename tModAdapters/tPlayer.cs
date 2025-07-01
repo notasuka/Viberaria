@@ -67,12 +67,17 @@ public class tPlayer : ModPlayer
     public override void PostUpdateBuffs()
     {
         if (Main.myPlayer != Player.whoAmI) return;
+
+        // Find the longest debuff
         int debuffsTime = 0;
+
+        // Iterate (de)buffs from the config menu.
         foreach (var buffId in DebuffsSelected)
         {
             int index = Player.FindBuffIndex(buffId);
             if (index == -1)
             {
+                // The buff is no longer active on the player. Reset its timer.
                 _activeDebuffsDuration[buffId] = 0;
             }
             else

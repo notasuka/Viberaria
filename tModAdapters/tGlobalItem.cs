@@ -12,12 +12,12 @@ public class tGlobalItem : GlobalItem
 {
     public override void OnConsumeItem(Item item, Player player)
     {
-        if (item.type == ItemID.HealingPotion ||
-            item.type == ItemID.GreaterHealingPotion ||
-            item.type == ItemID.SuperHealingPotion ||
-            item.type == ItemID.ManaPotion ||
-            item.type == ItemID.GreaterManaPotion ||
-            item.type == ItemID.SuperManaPotion)
+        if (item.type is ItemID.HealingPotion
+                or ItemID.GreaterHealingPotion
+                or ItemID.SuperHealingPotion
+                or ItemID.ManaPotion
+                or ItemID.GreaterManaPotion
+                or ItemID.SuperManaPotion)
         {
             if (Main.myPlayer == player.whoAmI)
                 PotionVibration();

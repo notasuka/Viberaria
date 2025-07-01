@@ -107,7 +107,7 @@ public static class VibrationManager
     /// <returns>The first valid event in the list, or null if none found.</returns>
     private static VibrationEvent GetNextEvent(LinkedList<VibrationEvent> eventList)
     {
-        // Todo: There might be a crash when locking the list if the intiface server stops while connected. Not
+        // Todo: There might be a crash when locking the list if the Intiface server stops while connected. Not
         //  sure what the exact context is...
         //  "NullReferenceException" at Viberaria.VibrationManager.VibrationManager.GetNextEvent(LinkedList`1 eventList)
         if (eventList == null)
@@ -143,10 +143,11 @@ public static class VibrationManager
                 }
                 catch
                 {
-                    tChat.Logger.WarnFormat("Viberaria: [487545] This will have caused a crash. " +
-                                            "Please report the funny number to the developer.");
-                    tChat.LogToPlayer("Viberaria: [487545] This will have caused a crash. " +
-                                      "Please report the funny number to the developer.", Color.Red);
+                    tChat.Logger.Warn("Viberaria: [487545] This will have caused a crash. "
+                                      + "Please report the funny number to the developer.");
+                    tChat.LogToPlayer("Viberaria: [487545] This will have caused a crash. "
+                                      + "Please report the funny number to the developer.",
+                                      Color.Red);
                     return null;
                 }
             }
@@ -156,16 +157,19 @@ public static class VibrationManager
     }
 
     /// <summary>
-    /// Loop through all priorities and pick the first event of highest priority. Then vibrate toys with this event's strength.
+    /// Loop through all priorities and pick the first event of highest
+    /// priority. Then vibrate toys with this event's strength.
     /// </summary>
     private static async Task ProcessEvents()
     {
         bool eventFound = false;
         VibrationEvent soonestEvent = null;
 
-        // This section is getting locked because _currentEvent is being changed. Between checking if the local
-        // variable currentEvent is equal to _currentEvent and setting the _currentEvent to the new currentEvent,
-        // another thread could pass the equality comparison with the same event.
+        // This section is getting locked because _currentEvent is being
+        // changed. Between checking if the local variable currentEvent is
+        // equal to _currentEvent and setting the _currentEvent to the new
+        // currentEvent, another thread could pass the equality comparison
+        // with the same event.
         lock (EventCheckerLock)
         {
             foreach (var priority in Enum.GetValues(typeof(VibrationPriority))
@@ -270,7 +274,11 @@ public static class VibrationManager
                 _currentStrength = vibrationEvent.Strength;
                 if (Instance.Debug.Enabled && Instance.Debug.ToyStrengthMessages)
                 {
-                        tChat.LogToPlayer($"Vibrating at `{vibrationEvent.Strength}` for `{callbackTime}` msec", Color.Lime);
+                    tChat.LogToPlayer(
+                        Client.Connected
+                            ? $"Vibrating at `{vibrationEvent.Strength}` for `{callbackTime}` msec"
+                            : $"Simulating at `{vibrationEvent.Strength}` for `{callbackTime}` msec (intiface disconnected)",
+                        Color.Lime);
                 }
 
                 TryVibrateAllDevices(vibrationEvent.Strength);

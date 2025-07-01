@@ -63,17 +63,23 @@ public static class Vibration
         Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
     }
 
+    /// <summary>
+    /// Vibrate the user's toy when the user has a debuff.
+    /// </summary>
+    /// <param name="durationTicks">The length of the player's longest
+    /// active debuff.</param>
     public static void DebuffVibration(int durationTicks)
     {
-        // durationTicks should be length of the player's longest active debuff.
         if(!Instance.ViberariaEnabled ||
            !Instance.DebuffVibrationEnabled ||
            !Client.Connected)
             return;
 
-        // This function is called every tick, so the highest debuff duration should decrease by 1 every tick.
-        // This is to reduce unnecessarily clearing the ongoing debuff vibration events.
-        if (_expectedDebuffDuration > 0) _expectedDebuffDuration--;
+        // This function is called every tick, so the longest debuff should
+        // decrease by 1 every tick. This is to reduce unnecessarily clearing
+        // the ongoing debuff vibration events.
+        if (_expectedDebuffDurationTicks > 0)
+            _expectedDebuffDurationTicks--;
 
         if (durationTicks == _expectedDebuffDuration)
             return;

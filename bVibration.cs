@@ -35,7 +35,7 @@ public static class bVibration
             return;
 
         float range = Instance.HealthMaxIntensity - Instance.HealthMinIntensity;
-        float normalizedValue = (1 - currentHp / (float)maxHp) * range + Instance.HealthMinIntensity;
+        float normalizedValue = currentHp == maxHp ? 0 : (1 - currentHp / (float)maxHp) * range + Instance.HealthMinIntensity;
 
         VibrateAllDevices(normalizedValue);
     }

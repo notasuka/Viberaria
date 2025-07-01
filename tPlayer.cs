@@ -26,7 +26,7 @@ public class tPlayer : ModPlayer
     public override void NaturalLifeRegen(ref float regen)
     {
         if (Player == Main.LocalPlayer)
-            HealthUpdated(Player.statLife, Player.statLifeMax);
+            HealthUpdated(Player.statLife, Player.statLifeMax2);
     }
 
     public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
@@ -49,7 +49,7 @@ public class tPlayer : ModPlayer
     public override void OnRespawn()
     {
         Reset(); // first reset to prevent _busy from blocking, then rerun health update
-        HealthUpdated(Player.statLife, Player.statLifeMax);
+        HealthUpdated(Player.statLife, Player.statLifeMax2);
     }
 
     public override async void PreUpdateBuffs()

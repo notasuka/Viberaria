@@ -11,7 +11,7 @@ public class ViberariaConfig : ModConfig
     private const int MinTime = 10;
     private const int MaxTime = 3000;
     private const int IncrementTime = 10;
-    private const float MinIntensity = 0.05f;
+    private const float MinIntensity = 0.00f;
     private const float MaxIntensity = 1f;
     private const float IncrementIntensity = 0.01f;
 

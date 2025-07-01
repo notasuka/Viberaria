@@ -17,6 +17,24 @@ public static class VibrationManager
     private static readonly object CurrentStrengthLock = new();
     private static readonly object EventCheckerLock = new();
 
+    /// <summary>
+    /// Getter for the event lists.
+    /// It prevents interference from outside by detaching the dictionary and
+    /// linked lists from the class variable. The vibration events are still
+    /// the original.
+    /// </summary>
+    /// <returns>A new dictionary with the linked list copied into an array.</returns>
+    public static Dictionary<VibrationPriority, VibrationEvent[]> GetEventLists()
+    {
+        Dictionary<VibrationPriority, VibrationEvent[]> newEvents = new();
+        foreach (KeyValuePair<VibrationPriority,LinkedList<VibrationEvent>> priorityListPair in EventLists)
+        {
+            newEvents.Add(priorityListPair.Key, priorityListPair.Value.ToArray());
+        }
+
+        return newEvents;
+    }
+
     static VibrationManager()
     {
         foreach (VibrationPriority priority in Enum.GetValues(typeof(VibrationPriority)))

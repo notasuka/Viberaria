@@ -78,8 +78,8 @@ public static class Vibration
         // This function is called every tick, so the longest debuff should
         // decrease by 1 every tick. This is to reduce unnecessarily clearing
         // the ongoing debuff vibration events.
-        if (_expectedDebuffDurationTicks > 0)
-            _expectedDebuffDurationTicks--;
+        if (_expectedDebuffDuration > 0)
+            _expectedDebuffDuration--;
 
         if (durationTicks == _expectedDebuffDuration)
             return;

@@ -24,6 +24,7 @@ public class VibrationStep
 
     public override bool Equals(object obj) {
         if (obj is VibrationStep other)
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             return Intensity == other.Intensity && Duration == other.Duration;
         return base.Equals(obj);
     }

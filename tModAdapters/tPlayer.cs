@@ -61,7 +61,7 @@ public class tPlayer : ModPlayer
     {
         if (Main.myPlayer != Player.whoAmI) return;
         Reset(); // first reset to prevent _busy from blocking, then rerun health update
-        HealthUpdated(Player.statLife, Player.statLifeMax);
+        HealthUpdated(Player.statLife, Player.statLifeMax2);
     }
 
     public override void PostUpdateBuffs()

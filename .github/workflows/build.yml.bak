@@ -1,0 +1,110 @@
+name: Build Viberaria tMod
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Auto-bump patch version in build.txt
+        run: |
+          $buildTxt = "build.txt"
+          $lines = Get-Content $buildTxt
+          $updatedLines = @()
+
+          foreach ($line in $lines) {
+              if ($line -match '^version *= *(\d+)\.(\d+)\.(\d+)$') {
+                  $major = [int]$matches[1]
+                  $minor = [int]$matches[2]
+                  $patch = [int]$matches[3] + 1
+                  $newVersion = "$major.$minor.$patch"
+                  $updatedLines += "version = $newVersion"
+                  echo "VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+              } else {
+                  $updatedLines += $line
+              }
+          }
+
+          $updatedLines | Set-Content $buildTxt
+          git add $buildTxt
+          git commit -m "CI: bump version to $env:VERSION"
+          git tag "v$env:VERSION"
+          git push origin master --tags
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install tModLoader
+        run: |
+          mkdir tML
+          wget -qO tML/tModLoader.zip https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip
+          unzip tML/tModLoader.zip -d tML
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build Mod
+        shell: pwsh
+        run: |
+          tML\tMod.exe build $PWD
+
+      - name: Find Built Mod
+        run: |
+          mkdir artifacts
+          $compiledMod = Get-ChildItem "$env:USERPROFILE\Documents\My Games\Terraria\ModLoader\ModCompile" -Filter *.tmod -Recurse -ErrorAction SilentlyContinue
+          if ($compiledMod) {
+            Copy-Item $compiledMod.FullName -Destination artifacts -Force
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Viberaria
+          path: artifacts/*.tmod
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Viberaria
+          path: release-artifact
+
+      - name: Get Mod Version
+        id: modversion
+        run: |
+          echo "VERSION=$(grep '^version' build.txt | cut -d= -f2 | xargs)" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          files: release-artifact/*.tmod

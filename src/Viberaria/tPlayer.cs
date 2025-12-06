@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -15,7 +16,14 @@ public class tPlayer : ModPlayer
     private readonly int[] _debuffs = { 20, 24, 44, 70 };
 
     public override void OnEnterWorld()
-        => ClientConnect();
+    {
+        var latestVersion = tUpdateChecker.CheckForUpdateAsync(Mod.Version.ToString()).Result;
+        if (!string.IsNullOrEmpty(latestVersion))
+        {
+            tChat.LogToPlayer($"A new version of Viberaria is available: {latestVersion}", Color.AliceBlue);
+        }
+        ClientConnect();   
+    }
 
     public override void Load()
         => ClientHandles();

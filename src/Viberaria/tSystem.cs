@@ -26,7 +26,9 @@ public class tSystem : ModSystem
     }
 
     public override void OnWorldLoad()
-        => WorldLoaded = true;
+    {
+        WorldLoaded = true;
+    }
 
     internal UserInterface _configInterface;
     internal ConfigUI _configUi;

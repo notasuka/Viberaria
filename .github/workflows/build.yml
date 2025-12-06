@@ -1,10 +1,16 @@
 name: Build Viberaria tMod
 
+env:
+  TML_BUILD_PATH_OVERRIDE: ./bin
+  
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+    
+permissions: 
+  contents: write
 
 jobs:
   build:
@@ -20,7 +26,7 @@ jobs:
       - name: Auto-bump patch version in build.txt
         shell: powershell
         run: |
-          $buildTxt = "build.txt"
+          $buildTxt = "src/Viberaria/build.txt"
           $lines = Get-Content $buildTxt
           $updatedLines = @()
           $newVersion = $null
@@ -32,8 +38,6 @@ jobs:
                   $patch = [int]$matches[3] + 1
                   $newVersion = "$major.$minor.$patch"
                   $updatedLines += "version = $newVersion"
-
-                  # Export for later steps (release job)
                   echo "VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
               } else {
                   $updatedLines += $line
@@ -47,51 +51,52 @@ jobs:
 
           git add $buildTxt
           git commit -m "CI: bump version to $newVersion"
-          git tag "v$newVersion"
-          git pull --rebase
-          git push origin master --tags
-      
-      
+
+          if ($newVersion) {
+              if (-not (git tag --list "v$newVersion")) {
+                  git tag "v$newVersion"
+              }
+              git push origin master --tags --force
+          } else {
+              Write-Host "No version found to bump, skipping tag and push."
+          }
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install tModLoader
+      - name: Download tModLoader
         run: |
-          mkdir tML
-          wget -qO tML/tModLoader.zip https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip
-          unzip tML/tModLoader.zip -d tML
+          curl -s -L https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip -o tModLoader.zip
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
+      - name: Extract tModLoader
+        run: |
+          unzip -q -o tModLoader.zip -d ../tModLoader
+          rm tModLoader.zip
+          
+      - name: Create tModLoader.targets file
+        shell: bash
+        run: |
+          cat >> ../tModLoader.targets << EOF
+          <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+            <Import Project="tModLoader\tMLMod.targets" />
+          </Project>
+          EOF
 
       - name: Restore Dependencies
         run: dotnet restore
 
-      - name: Build Mod
-        shell: pwsh
-        run: |
-          tML\tMod.exe build $PWD
+      - name: Build solution
+        run: dotnet build Viberaria.sln --configuration Release
 
-      - name: Find Built Mod
-        run: |
-          mkdir artifacts
-          $compiledMod = Get-ChildItem "$env:USERPROFILE\Documents\My Games\Terraria\ModLoader\ModCompile" -Filter *.tmod -Recurse -ErrorAction SilentlyContinue
-          if ($compiledMod) {
-            Copy-Item $compiledMod.FullName -Destination artifacts -Force
-          }
-
-      - name: Upload Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Viberaria
-          path: artifacts/*.tmod
+          name: artifacts
+          path: |
+            ./bin/tModLoader/Mods/Viberaria.tmod
+            ./src/Viberaria/bin/Release/net8.0/Viberaria.dll
 
   release:
     needs: build

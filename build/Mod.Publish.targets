@@ -1,0 +1,17 @@
+<Project>
+
+    <PropertyGroup>
+        <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Krafs.Publicizer" PrivateAssets="true" Version="2.2.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Publicize Include="FNA" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+        <Publicize Include="ReLogic" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+        <Publicize Include="tModLoader" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+    </ItemGroup>
+
+</Project>

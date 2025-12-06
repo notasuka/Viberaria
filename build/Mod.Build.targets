@@ -1,0 +1,13 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    
+    <Import Project="..\..\tModLoader.targets" />
+    
+    <Import Project="Mod.Publish.targets"/>
+
+    <Import Condition="'$(NoModPackaging)' != ''" Project="Mod.Packaging.targets"/>
+
+    <PropertyGroup>
+        <ExtraBuildModFlags Condition="'$(TML_BUILD_PATH_OVERRIDE)' != ''">$(ExtraBuildModFlags)-savedirectory &quot;$([System.IO.Path]::GetFullPath('.'))/$(TML_BUILD_PATH_OVERRIDE)&quot; </ExtraBuildModFlags>
+    </PropertyGroup>
+    
+</Project>

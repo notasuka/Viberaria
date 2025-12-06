@@ -73,7 +73,6 @@ jobs:
           git push origin $tag
 
       - name: Setup .NET
-        if: steps.bump.outputs.bumped == 'true'
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'

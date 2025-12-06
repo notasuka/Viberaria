@@ -107,7 +107,6 @@ jobs:
           name: artifacts
           path: |
             ./bin/tModLoader/Mods/Viberaria.tmod
-            ./src/Viberaria/bin/Release/net8.0/Viberaria.dll
 
   release:
     needs: build
@@ -118,7 +117,7 @@ jobs:
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
-          name: Viberaria
+          name: artifacts
           path: release-artifact
 
       - name: Get Mod Version

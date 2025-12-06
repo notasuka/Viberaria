@@ -2,16 +2,15 @@ name: Build Viberaria tMod
 
 env:
   TML_BUILD_PATH_OVERRIDE: ./bin
-  
+  GH_TOKEN: ${{ github.token }}
+  BUILD_TXT: src/Viberaria/build.txt
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
     branches: [ "master" ]
     
 permissions: 
   contents: write
-  pull-requests: write
+  id-token: read
 
 jobs:
   build:
@@ -24,10 +23,13 @@ jobs:
           fetch-depth: 0
         
 
-      - name: Auto-bump patch version in build.txt
+      - name: Auto-bump patch version
+        id: bump
         shell: powershell
         run: |
-          $buildTxt = "src/Viberaria/build.txt"
+          $buildTxt = "${{ env.BUILD_TXT }}"
+          if (-not (Test-Path $buildTxt)) { Write-Error "build.txt not found at $buildTxt"; exit 1 }
+
           $lines = Get-Content $buildTxt
           $updatedLines = @()
           $newVersion = $null
@@ -39,39 +41,38 @@ jobs:
                   $patch = [int]$matches[3] + 1
                   $newVersion = "$major.$minor.$patch"
                   $updatedLines += "version = $newVersion"
-                  echo "VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
               } else {
                   $updatedLines += $line
               }
           }
 
-          $updatedLines | Set-Content $buildTxt
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Create bump branch
-          $branch = "version-bump-$newVersion"
-          git checkout -b $branch
-          git add $buildTxt
-          git commit -m "CI: bump version to $newVersion"
-
-          # Tag locally
-          if (-not (git tag --list "v$newVersion")) {
-              git tag "v$newVersion"
+          if (-not $newVersion) {
+              Write-Host "No version line matched; skipping bump."
+              echo "bumped=false" >> $GITHUB_OUTPUT
+              exit 0
           }
 
-          # Push branch and tag (NOT master)
-          git push -u origin $branch --tags
+          # Write updated file locally
+          $updatedLines | Set-Content $buildTxt
+          echo "New version: $newVersion"
+          echo "version=$newVersion" >> $GITHUB_OUTPUT
+          echo "bumped=true" >> $GITHUB_OUTPUT
 
-          # Create PR
-          gh pr create `
-            --title "Version bump to $newVersion" `
-            --body "Automated version bump" `
-            --base master `
-            --head $branch
+          # Create annotated tag locally
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          $tag = "v$newVersion"
+          if (-not (git tag --list $tag)) {
+              git tag -a $tag -m "Release $tag"
+          } else {
+              Write-Host "Tag $tag already exists locally."
+          }
+
+          # Push tag only
+          git push origin $tag
 
       - name: Setup .NET
+        if: steps.bump.outputs.bumped == 'true'
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
@@ -115,17 +116,30 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-
+    
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: artifacts
           path: release-artifact
 
+      - name: Get Mod Version
+        id: modversion
+        run: |
+          VERSION=$(grep '^version' src/Viberaria/build.txt | cut -d= -f2 | xargs)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Detected version: $VERSION"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.build.outputs.version }}
-          name: Release v${{ needs.build.outputs.version }}
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
           files: release-artifact/*.tmod
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  

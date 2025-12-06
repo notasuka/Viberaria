@@ -2,6 +2,7 @@ name: Build Viberaria tMod
 
 env:
   TML_BUILD_PATH_OVERRIDE: ./bin
+  GH_TOKEN: ${{ github.token }}
   
 on:
   push:

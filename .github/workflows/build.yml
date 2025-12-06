@@ -2,7 +2,6 @@ name: Build Viberaria tMod
 
 env:
   TML_BUILD_PATH_OVERRIDE: ./bin
-  GH_TOKEN: ${{ github.token }}
   
 on:
   push:
@@ -51,26 +50,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create bump branch
-          $branch = "version-bump-$newVersion"
-          git checkout -b $branch
           git add $buildTxt
           git commit -m "CI: bump version to $newVersion"
 
-          # Tag locally
-          if (-not (git tag --list "v$newVersion")) {
-              git tag "v$newVersion"
+          if ($newVersion) {
+              if (-not (git tag --list "v$newVersion")) {
+                  git tag "v$newVersion"
+              }
+              git push origin master --tags --force
+          } else {
+              Write-Host "No version found to bump, skipping tag and push."
           }
-
-          # Push branch and tag (NOT master)
-          git push -u origin $branch --tags
-
-          # Create PR
-          gh pr create `
-            --title "Version bump to $newVersion" `
-            --body "Automated version bump" `
-            --base master `
-            --head $branch
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -100,6 +90,10 @@ jobs:
 
       - name: Build solution
         run: dotnet build Viberaria.sln --configuration Release
+        
+      - name: Set version output
+        id: version
+        run: echo "version=${{ env.VERSION }}" >> $GITHUB_OUTPUT
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -120,14 +114,9 @@ jobs:
           name: artifacts
           path: release-artifact
 
-      - name: Get Mod Version
-        id: modversion
-        run: |
-          echo "VERSION=$(grep '^version' build.txt | cut -d= -f2 | xargs)" >> $GITHUB_ENV
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ env.VERSION }}
-          name: Release v${{ env.VERSION }}
+          tag_name: v${{ needs.build.outputs.version }}
+          name: Release v${{ needs.build.outputs.version }}
           files: release-artifact/*.tmod

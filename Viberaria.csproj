@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Buttplug" Version="3.0.1" />
     <PackageReference Include="Buttplug.Client.Connectors.WebsocketConnector" Version="3.0.1" />
-    <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Localization\" />

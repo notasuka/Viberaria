@@ -1,0 +1,139 @@
+name: Build Viberaria tMod
+
+env:
+  TML_BUILD_PATH_OVERRIDE: ./bin
+  GH_TOKEN: ${{ github.token }}
+  BUILD_TXT: src/Viberaria/build.txt
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auto-bump patch version
+        id: bump
+        shell: powershell
+        run: |
+          $buildTxt = "${{ env.BUILD_TXT }}"
+          if (-not (Test-Path $buildTxt)) { Write-Error "build.txt not found at $buildTxt"; exit 1 }
+
+          $lines = Get-Content $buildTxt
+          $updatedLines = @()
+          $newVersion = $null
+
+          foreach ($line in $lines) {
+              if ($line -match '^version *= *(\d+)\.(\d+)\.(\d+)$') {
+                  $major = [int]$matches[1]
+                  $minor = [int]$matches[2]
+                  $patch = [int]$matches[3] + 1
+                  $newVersion = "$major.$minor.$patch"
+                  $updatedLines += "version = $newVersion"
+              } else {
+                  $updatedLines += $line
+              }
+          }
+
+          if (-not $newVersion) {
+              Write-Host "No version line matched; skipping bump."
+              echo "bumped=false" >> $GITHUB_OUTPUT
+              exit 0
+          }
+
+          # Write bumped file
+          $updatedLines | Set-Content $buildTxt
+
+          echo "New version: $newVersion"
+          echo "version=$newVersion" >> $GITHUB_OUTPUT
+          echo "VERSION=$newVersion" >> $GITHUB_ENV
+          echo "bumped=true" >> $GITHUB_OUTPUT
+
+          # Tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          $tag = "v$newVersion"
+
+          if (-not (git tag --list $tag)) {
+              git tag -a $tag -m "Release $tag"
+          } else {
+              Write-Host "Tag already exists: $tag"
+          }
+
+          git push origin $tag
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download tModLoader
+        run: |
+          curl -s -L https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip -o tModLoader.zip
+
+      - name: Extract tModLoader
+        run: |
+          unzip -q -o tModLoader.zip -d ../tModLoader
+          rm tModLoader.zip
+
+      - name: Create tModLoader.targets file
+        shell: bash
+        run: |
+          cat >> ../tModLoader.targets << EOF
+          <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+            <Import Project="tModLoader/tMLMod.targets" />
+          </Project>
+          EOF
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build Viberaria.sln --configuration Release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: ./bin/tModLoader/Mods/Viberaria.tmod
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: artifacts
+          path: release-artifact
+
+      - name: Get Mod Version
+        id: modversion
+        run: |
+          VERSION=$(grep '^version' src/Viberaria/build.txt | cut -d= -f2 | xargs)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Detected version: $VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          files: release-artifact/*.tmod
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

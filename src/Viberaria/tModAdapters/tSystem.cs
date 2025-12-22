@@ -15,7 +15,7 @@ class ConfigUI : UIState
 public class tSystem : ModSystem
 {
     public static tSystem Sys;
-    
+
     public bool WorldLoaded = false;
 
     public override void OnWorldUnload()

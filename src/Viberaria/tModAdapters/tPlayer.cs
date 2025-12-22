@@ -18,6 +18,11 @@ public class tPlayer : ModPlayer
     public override void OnEnterWorld()
     {
         if (Main.myPlayer != Player.whoAmI) return;
+        var latestVersion = tUpdateChecker.CheckForUpdateAsync(Mod.Version.ToString()).Result;
+        if (!string.IsNullOrEmpty(latestVersion))
+        {
+            tChat.LogToPlayer($"A new version of Viberaria is available: {latestVersion}", Color.AliceBlue);
+        }
         DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
         ClientConnect();
     }

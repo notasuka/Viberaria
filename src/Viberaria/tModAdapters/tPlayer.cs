@@ -1,78 +1,102 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
+using static Viberaria.IntifaceConnection.Vibration;
+using static Viberaria.VibrationManager.VibrationManager;
+using static Viberaria.IntifaceConnection.ClientHandler;
+using static Viberaria.Config.ViberariaConfig;
 
-using static Viberaria.bVibration;
-using static Viberaria.bClient;
-using static Viberaria.tSystem;
-using static Viberaria.ViberariaConfig;
 
-
-namespace Viberaria;
+namespace Viberaria.tModAdapters;
 
 public class tPlayer : ModPlayer
 {
-    private readonly int[] _debuffs = { 20, 24, 44, 70 };
+    private Dictionary<int, int> _activeDebuffsDuration = new();
 
     public override void OnEnterWorld()
-        => ClientConnect();
-
-    public override void Load()
-        => ClientHandles();
+    {
+        if (Main.myPlayer != Player.whoAmI) return;
+        DebuffsSelected = FindModBuffs(Instance.Debuffs.DebuffNames);
+        ClientConnect();
+    }
 
     public override void Unload()
         => ClientDisconnect();
 
     public override void NaturalLifeRegen(ref float regen)
     {
-        if (Player == Main.LocalPlayer)
-            HealthUpdated(Player.statLife, Player.statLifeMax2);
+        if (Main.myPlayer != Player.whoAmI) return;
+        HealthUpdated(Player.statLife, Player.statLifeMax2);
     }
 
     public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
     {
-        if (Player == Main.LocalPlayer)
-            Died(damageSource, Player.respawnTimer );
+        if (Main.myPlayer != Player.whoAmI) return;
+        Died(Player.respawnTimer);
     }
+
     public override void OnHurt(Player.HurtInfo hurtInfo)
     {
-        if (Player == Main.LocalPlayer)
-            Damaged(hurtInfo, !Player.dead, Player.statLifeMax2);
+        if (Main.myPlayer != Player.whoAmI) return;
+        Damaged(hurtInfo, Player.statLifeMax2);
     }
 
     public override void OnConsumeAmmo(Item weapon, Item ammo)
     {
-        if (Player == Main.LocalPlayer)
-            SoIStartedBlasting(weapon, ammo);
+        if (Main.myPlayer != Player.whoAmI) return;
+        SoIStartedBlasting(weapon, ammo);
     }
-    
+
+    public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition)
+    {
+        if (Main.myPlayer != Player.whoAmI ||
+            itemDrop <= 0
+            ) return;
+        FishBite();
+    }
+
     public override void OnRespawn()
     {
-        Reset(); // first reset to prevent _busy from blocking, then rerun health update
+        if (Main.myPlayer != Player.whoAmI) return;
+        Reset(); // Clear any remaining vibration cache.
         HealthUpdated(Player.statLife, Player.statLifeMax2);
     }
 
-    public override async void PreUpdateBuffs()
+    public override void PostUpdateBuffs()
     {
-        foreach (var buffId in _debuffs)
+        if (Main.myPlayer != Player.whoAmI) return;
+
+        // Find the longest debuff
+        int debuffsTime = 0;
+
+        // Iterate (de)buffs from the config menu.
+        foreach (var buffId in DebuffsSelected)
         {
             int index = Player.FindBuffIndex(buffId);
-            if (index != -1)
-                await DamageOverTimeVibration(Player.buffTime[index]);
+            if (index == -1)
+            {
+                // The buff is no longer active on the player. Reset its timer.
+                _activeDebuffsDuration[buffId] = 0;
+            }
+            else
+            {
+                _activeDebuffsDuration[buffId] = Player.buffTime[index];
+                if (Player.buffTime[index] > debuffsTime)
+                    debuffsTime = Player.buffTime[index];
+            }
         }
+
+        DebuffVibration(debuffsTime);
     }
 
     public override void PostUpdate()
     {
-        if(!Instance.ViberariaEnabled)
+        if (!Instance.ViberariaEnabled)
         {
             Reset();
             Halt();
-            return;
-        }
-        if (tSys.WorldLoaded && _client.Connected != true)
-        {
-            ClientConnect();
         }
     }
 }

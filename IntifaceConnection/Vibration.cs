@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Viberaria.tModAdapters;
 using Viberaria.VibrationManager;
-using static Viberaria.IntifaceConnection.ClientHandler;
 using static Viberaria.Config.ViberariaConfig;
 using static Viberaria.VibrationManager.VibrationManager;
 
@@ -15,6 +14,7 @@ public static class Vibration
     private static readonly LinkedList<(DateTime, int)> ManaUsages = new();
     private static readonly LinkedList<DateTime> AmmoUsages = new();
     private static int _expectedDebuffDurationTicks = 0;
+    private static DateTime? _debuffLastPatternEnd = null;
 
     private static bool PlayerIsDead => Main.clientPlayer.dead;
 
@@ -72,6 +72,8 @@ public static class Vibration
            !Instance.DebuffVibrationEnabled)
             return;
 
+        bool ongoing = _expectedDebuffDurationTicks > 0;
+
         // This function is called every tick, so the longest debuff should
         // decrease by 1 every tick. This is to reduce unnecessarily clearing
         // the ongoing debuff vibration events.
@@ -84,23 +86,56 @@ public static class Vibration
 
         if (durationTicks == 0)
         {
+            // The function did not return at the expected debuff duration,
+            // which means longest debuff must have (unexpectedly) finished.
+            // As such, clear and update the ongoing debuff vibrations.
+            _debuffLastPatternEnd = null;
             ClearEvents(VibrationPriority.Debuff, update: true);
             return;
         }
 
-        ClearEvents(VibrationPriority.Debuff);
+        // At this point: A new (longest) debuff has been given to the player.
+        // Clear the ongoing debuff vibration pattern and re-place it.
+        // This can also be the case if no debuffs were ongoing previously.
+
+        if (!ongoing || _debuffLastPatternEnd == null)
+        {
+            // No debuffs were ongoing previously, so start the pattern from the beginning.
+            _debuffLastPatternEnd = DateTime.Now;
+        }
+
+        // To make the ongoing pattern flow smoothly, see how far along the current event is.
+
+        TimeSpan offset = _debuffLastPatternEnd.Value - DateTime.Now;
         int durationMsec = (int)(durationTicks / 60.0 * 1000);
+        TimeSpan patternLengthSpan = new TimeSpan(0,0,0,0,Instance.DebuffPattern.PatternLength);
 
-        TimeSpan offset = TimeSpan.Zero;
+        if (-offset.TotalMilliseconds > Instance.DebuffPattern.PatternLength)
+        {
+            // The offset is long enough ago that another pattern fits between it. As such, begin the new pattern.
+            // Time since end of last pattern / Pattern length = number of patterns that fit between now and the last pattern.
+            // Calculate this manually in case a debuff lasts longer than a pattern,
+            //  and thus needs multiple patterns to fill that time since the last pattern.
+            int newPatternCount = Math.DivRem(
+                (int)-offset.TotalMilliseconds,
+                Instance.DebuffPattern.PatternLength
+            ).Item1;
+            _debuffLastPatternEnd += newPatternCount * patternLengthSpan;
+            // Recalculate the offset from the new last pattern ending.
+            offset += newPatternCount * patternLengthSpan;
+        }
 
+        ClearEvents(VibrationPriority.Debuff);
         while (offset.TotalMilliseconds < durationMsec)
         {
             Instance.DebuffPattern.PlayPattern(
                 VibrationPriority.Debuff,
                 offset,
-                maxDuration: durationMsec
+                // When the offset is negative, it should still play the entire pattern,
+                //  up until the duration of the debuff.
+                maxDuration: durationMsec + (int)Math.Max(0, -offset.TotalMilliseconds)
             );
-            offset += new TimeSpan(0,0,0,0,Instance.DebuffPattern.PatternLength);
+            offset += patternLengthSpan;
         }
     }
 

@@ -21,8 +21,7 @@ public static class Vibration
     public static void HealthUpdated(int currentHp, int maxHp)
     {
         if(!Instance.ViberariaEnabled ||
-           !Instance.HealthVibratationScalingEnabled ||
-           !Client.Connected)
+           !Instance.HealthVibratationScalingEnabled)
             return;
 
         if (PlayerIsDead)
@@ -41,8 +40,7 @@ public static class Vibration
     public static void Damaged(Player.HurtInfo hurtInfo, int maxHp)
     {
         if(!Instance.ViberariaEnabled ||
-           !Instance.DamageVibrationEnabled ||
-           !Client.Connected)
+           !Instance.DamageVibrationEnabled)
             return;
 
         if (hurtInfo.Damage < Instance.MinimumDamageForVibration) return;
@@ -57,8 +55,7 @@ public static class Vibration
     {
         // todo add respawn timing death.
         if(!Instance.ViberariaEnabled ||
-           !Instance.DeathVibrationEnabled ||
-           !Client.Connected)
+           !Instance.DeathVibrationEnabled)
             return;
         ClearEvents(VibrationPriority.Debuff);
         Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
@@ -72,8 +69,7 @@ public static class Vibration
     public static void DebuffVibration(int durationTicks)
     {
         if(!Instance.ViberariaEnabled ||
-           !Instance.DebuffVibrationEnabled ||
-           !Client.Connected)
+           !Instance.DebuffVibrationEnabled)
             return;
 
         // This function is called every tick, so the longest debuff should
@@ -111,8 +107,7 @@ public static class Vibration
     public static void PotionVibration()
     {
         if(!Instance.ViberariaEnabled ||
-           !Instance.PotionUseVibrationEnabled ||
-           !Client.Connected)
+           !Instance.PotionUseVibrationEnabled)
             return;
         Instance.PotionPattern.PlayPattern(VibrationPriority.Potion);
     }
@@ -138,8 +133,7 @@ public static class Vibration
     {
         // This function was largely copied from ManaUsageVibration().
         if (!Instance.ViberariaEnabled ||
-            !Instance.BlastingEnabled ||
-            !Client.Connected)
+            !Instance.BlastingEnabled)
             return;
 
         AmmoUsages.AddLast(DateTime.Now);
@@ -214,8 +208,7 @@ public static class Vibration
     public static void ManaUsageVibration(Item item, Player player)
     {
         if (!Instance.ViberariaEnabled ||
-            !Instance.ManaUsageVibrationEnabled ||
-            !Client.Connected)
+            !Instance.ManaUsageVibrationEnabled)
             return;
         if (player.GetManaCost(item) == 0) return;
 
@@ -269,8 +262,7 @@ public static class Vibration
     public static void FishBite()
     {
         if (!Instance.ViberariaEnabled ||
-            !Instance.FishingVibrationEnabled ||
-            !Client.Connected)
+            !Instance.FishingVibrationEnabled)
             return;
 
         Instance.FishingPattern.PlayPattern(VibrationPriority.Fishing);
@@ -279,8 +271,7 @@ public static class Vibration
     public static void InstrumentVibration(float strength)
     {
         if (!Instance.ViberariaEnabled ||
-            !Instance.InstrumentVibrationEnabled ||
-            !Client.Connected)
+            !Instance.InstrumentVibrationEnabled)
             return;
 
         // In case people aren't sure how strong they are making their (or other's) toys vibrate.

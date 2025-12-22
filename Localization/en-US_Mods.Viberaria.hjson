@@ -71,6 +71,11 @@ Configs: {
 			Tooltip: Whether toys vibrate when you die.
 		}
 
+		DeathVibrationDuringRespawnTimer: {
+			Label: Death Vibration During Respawn Timer
+			Tooltip: Whether toys vibrate the entire length of the respawn timer. Will loop the pattern for its duration.
+		}
+
 		DeathPattern: {
 			Label: Death Pattern
 			Tooltip: ""

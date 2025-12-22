@@ -234,6 +234,7 @@ public class ViberariaConfig : ModConfig
     #region Death config
     [Header("DeathVibration")]
     [DefaultValue(true)] public bool DeathVibrationEnabled;
+    [DefaultValue(false)] public bool DeathVibrationDuringRespawnTimer;
     [SeparatePage] public VibrationPattern DeathPattern = new()
     {
         Pattern = [

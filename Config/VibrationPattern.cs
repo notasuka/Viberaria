@@ -84,7 +84,7 @@ public class VibrationPattern
             // potential events with lower priorities playing vibrations.
             if (step.Intensity != 0 || ZerosOverrideLowerPriority)
                 AddEvent(priority, patternOffset + stepOffset, step.Duration, factoredStrength, addToFront: false);
-            stepOffset += new TimeSpan(0, 0, 0, 0, step.Duration);
+            stepOffset += TimeSpan.FromMilliseconds(step.Duration);
         }
         return false;
     }

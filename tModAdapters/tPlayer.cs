@@ -60,7 +60,7 @@ public class tPlayer : ModPlayer
     public override void OnRespawn()
     {
         if (Main.myPlayer != Player.whoAmI) return;
-        Reset(); // first reset to prevent _busy from blocking, then rerun health update
+        Reset(); // Clear any remaining vibration cache.
         HealthUpdated(Player.statLife, Player.statLifeMax2);
     }
 

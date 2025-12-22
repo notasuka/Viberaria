@@ -72,7 +72,6 @@ public class tMod : Mod
             cursorDistance /= screenSizePosition / 2f;
             if (cursorDistance > 1f)
                 cursorDistance = 1f;
-
             PlayInstrument(player.HeldItem.Name, cursorDistance);
         }
 

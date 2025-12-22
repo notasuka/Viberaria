@@ -8,12 +8,15 @@ namespace Viberaria.Config;
 public class VibrationStep
 {
     private const int MinTime = 10;
-    private const int MaxTime = 3000;
+    private const int MaxTime = 30000;
     private const int IncrementTime = 10;
 
     [Range(0f,1f), Increment(0.01f), DefaultValue(.5f)]
     public float Intensity;
 
+    /// <summary>
+    /// The duration of a vibration pattern step, in milliseconds.
+    /// </summary>
     [Range(MinTime,MaxTime), Increment(IncrementTime), DefaultValue(500)]
     public int Duration;
 

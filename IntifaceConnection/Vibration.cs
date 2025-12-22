@@ -58,7 +58,25 @@ public static class Vibration
            !Instance.DeathVibrationEnabled)
             return;
         ClearEvents(VibrationPriority.Debuff);
-        Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
+        if (!Instance.DeathVibrationDuringRespawnTimer)
+        {
+            Instance.DeathPattern.PlayPattern(VibrationPriority.Death);
+        }
+        else
+        {
+            TimeSpan respawnTimerSpan = TimeSpan.FromMilliseconds(respawnTimer / 60.0 * 1000.0);
+
+            TimeSpan offset = TimeSpan.Zero;
+            while (offset < respawnTimerSpan)
+            {
+                Instance.DeathPattern.PlayPattern(
+                    VibrationPriority.Death,
+                    offset,
+                    maxDuration: Math.Min(0, (int)(respawnTimerSpan - offset).TotalMilliseconds)
+                );
+                offset += TimeSpan.FromMilliseconds(Instance.DeathPattern.PatternLength);
+            }
+        }
     }
 
     /// <summary>
@@ -108,7 +126,7 @@ public static class Vibration
 
         TimeSpan offset = _debuffLastPatternEnd.Value - DateTime.Now;
         int durationMsec = (int)(durationTicks / 60.0 * 1000);
-        TimeSpan patternLengthSpan = new TimeSpan(0,0,0,0,Instance.DebuffPattern.PatternLength);
+        TimeSpan patternLengthSpan = TimeSpan.FromMilliseconds(Instance.DebuffPattern.PatternLength);
 
         if (-offset.TotalMilliseconds > Instance.DebuffPattern.PatternLength)
         {
@@ -173,7 +191,7 @@ public static class Vibration
 
         AmmoUsages.AddLast(DateTime.Now);
 
-        TimeSpan timespan = new TimeSpan(ticks: Instance.BlastingBuildupTimeMsec * 10_000);
+        TimeSpan timespan = TimeSpan.FromMilliseconds(Instance.BlastingBuildupTimeMsec);
         // Take the sum of the past BuildupTime seconds of usage, and divide it by the BuildupTime.
         // Note that BuildupTime is in milliseconds. That means we need to divide it by 1000 to get usage per second.
         double ammoPerSecond = GetAmmoUsageSum(timespan) / (Instance.BlastingBuildupTimeMsec / 1000.0);
@@ -249,7 +267,7 @@ public static class Vibration
 
         ManaUsages.AddLast((DateTime.Now, player.GetManaCost(item)));
 
-        TimeSpan timespan = new TimeSpan(ticks: Instance.ManaUsageBuildupTimeMsec * 10_000);
+        TimeSpan timespan = TimeSpan.FromMilliseconds(Instance.ManaUsageBuildupTimeMsec);
         // Take the sum of the past BuildupTime seconds of usage, and divide it by the BuildupTime.
         // Note that BuildupTime is in milliseconds. That means we need to divide it by 1000 to get usage per second.
         double manaPerSecond = GetManaUsageSum(timespan) / (Instance.ManaUsageBuildupTimeMsec / 1000.0);
@@ -321,5 +339,8 @@ public static class Vibration
     public static void Reset()
     {
         _expectedDebuffDurationTicks = 0;
+        AmmoUsages.Clear();
+        ManaUsages.Clear();
+        Halt();
     }
 }

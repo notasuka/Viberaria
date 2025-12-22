@@ -14,7 +14,7 @@ public static class Vibration
 {
     private static readonly LinkedList<(DateTime, int)> ManaUsages = new();
     private static readonly LinkedList<DateTime> AmmoUsages = new();
-    private static int _expectedDebuffDuration = 0;
+    private static int _expectedDebuffDurationTicks = 0;
 
     private static bool PlayerIsDead => Main.clientPlayer.dead;
 
@@ -55,6 +55,7 @@ public static class Vibration
 
     public static void Died(int respawnTimer)
     {
+        // todo add respawn timing death.
         if(!Instance.ViberariaEnabled ||
            !Instance.DeathVibrationEnabled ||
            !Client.Connected)
@@ -78,12 +79,12 @@ public static class Vibration
         // This function is called every tick, so the longest debuff should
         // decrease by 1 every tick. This is to reduce unnecessarily clearing
         // the ongoing debuff vibration events.
-        if (_expectedDebuffDuration > 0)
-            _expectedDebuffDuration--;
+        if (_expectedDebuffDurationTicks > 0)
+            _expectedDebuffDurationTicks--;
 
-        if (durationTicks == _expectedDebuffDuration)
+        if (durationTicks == _expectedDebuffDurationTicks)
             return;
-        _expectedDebuffDuration = durationTicks;
+        _expectedDebuffDurationTicks = durationTicks;
 
         if (durationTicks == 0)
         {
@@ -98,7 +99,11 @@ public static class Vibration
 
         while (offset.TotalMilliseconds < durationMsec)
         {
-            Instance.DebuffPattern.PlayPattern(VibrationPriority.Debuff, offset, maxDuration: durationMsec);
+            Instance.DebuffPattern.PlayPattern(
+                VibrationPriority.Debuff,
+                offset,
+                maxDuration: durationMsec
+            );
             offset += new TimeSpan(0,0,0,0,Instance.DebuffPattern.PatternLength);
         }
     }
@@ -271,7 +276,7 @@ public static class Vibration
         Instance.FishingPattern.PlayPattern(VibrationPriority.Fishing);
     }
 
-    public static void Instrument(float strength)
+    public static void InstrumentVibration(float strength)
     {
         if (!Instance.ViberariaEnabled ||
             !Instance.InstrumentVibrationEnabled ||
@@ -284,11 +289,11 @@ public static class Vibration
 
         // remove ongoing events, so the new strength plays as soon as the instrument is played
         ClearEvents(VibrationPriority.Instrument);
-        Instance.FishingPattern.PlayPattern(VibrationPriority.Instrument, intensityFactor: strength);
+        Instance.InstrumentPattern.PlayPattern(VibrationPriority.Instrument, intensityFactor: strength);
     }
 
     public static void Reset()
     {
-        _expectedDebuffDuration = 0;
+        _expectedDebuffDurationTicks = 0;
     }
 }

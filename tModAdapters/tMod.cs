@@ -26,7 +26,7 @@ public class tMod : Mod
         if (Instance.Instruments.PrintInstrumentsToChatWhenUsed)
             tChat.LogToPlayer("Sound-playing instrument triggered: " + instrumentName, Color.YellowGreen);
         if (Instance.Instruments.InstrumentNames.Contains(instrumentName))
-            Vibration.Instrument(range);
+            Vibration.InstrumentVibration(range);
     }
 
     private void PlayInstrument(Player player, float range)
@@ -35,13 +35,13 @@ public class tMod : Mod
         if (Instance.Instruments.PrintInstrumentsToChatWhenUsed)
             tChat.LogToPlayer("Instrument used: " + instrumentName, Color.Green);
         if (Instance.Instruments.InstrumentNames.Contains(instrumentName))
-            Vibration.Instrument(range);
+            Vibration.InstrumentVibration(range);
     }
 
     /// <summary>
     /// These are sounds that are played in the Player.ItemCheck_PlayInstruments function. These are checked in
     /// <see cref="OnSoundPlay"/> to trigger PlayInstrument. Depending on the player's held item, it will trigger
-    /// <see cref="Vibration.Instrument"/>.
+    /// <see cref="Vibration.InstrumentVibration"/>.
     /// </summary>
     private static readonly SoundStyle[] ValidInstrumentSounds = [
         SoundID.Item26, // Item.type = 508

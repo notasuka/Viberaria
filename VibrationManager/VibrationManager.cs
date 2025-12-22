@@ -121,10 +121,11 @@ public static class VibrationManager
     /// <summary>
     /// Get the first vibration event in the given list that hasn't passed yet.
     /// </summary>
-    /// <param name="eventList">The event list of a certain Vibration Priority</param>
+    /// <param name="eventPriority">The priority to get the next event for.</param>
     /// <returns>The first valid event in the list, or null if none found.</returns>
-    private static VibrationEvent GetNextEvent(LinkedList<VibrationEvent> eventList)
+    private static VibrationEvent GetNextEvent(VibrationPriority eventPriority)
     {
+        LinkedList<VibrationEvent> eventList = EventLists[eventPriority];
         // Todo: There might be a crash when locking the list if the Intiface server stops while connected. Not
         //  sure what the exact context is...
         //  "NullReferenceException" at Viberaria.VibrationManager.VibrationManager.GetNextEvent(LinkedList`1 eventList)
@@ -194,7 +195,7 @@ public static class VibrationManager
                          .Cast<VibrationPriority>()
                          .OrderByDescending(priority => (int)priority))
             {
-                VibrationEvent currentEvent = GetNextEvent(EventLists[priority]);
+                VibrationEvent currentEvent = GetNextEvent(priority);
                 if (currentEvent == null)
                 {
                     continue;

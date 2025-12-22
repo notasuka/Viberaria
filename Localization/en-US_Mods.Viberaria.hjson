@@ -307,7 +307,7 @@ Configs: {
 
 		ModNameReplacement: {
 			Label: Mod Name Replacement
-			Tooltip: Replace a mod's instrument prefix with another (shorter) version.
+			Tooltip: Replace a mod's instrument prefix with another (shorter) version. (Eg: "CM:Saxophone")
 		}
 	}
 }

@@ -56,7 +56,7 @@ public class tPlayer : ModPlayer
             ) return;
         FishBite();
     }
-    
+
     public override void OnRespawn()
     {
         if (Main.myPlayer != Player.whoAmI) return;

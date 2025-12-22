@@ -93,7 +93,6 @@ public static class ClientHandler
                     ex.GetType(), ex.Message, ex.StackTrace);
                 await Task.Delay(4000);
             }
-
         }
 
         if (_attempts == 3)

@@ -17,6 +17,9 @@ public class VibrationPattern
 
     public List<VibrationStep> Pattern = new();
 
+    /// <summary>
+    /// The total length of the pattern in milliseconds.
+    /// </summary>
     internal int PatternLength => Pattern.Sum(step => step.Duration);
 
     public override string ToString()

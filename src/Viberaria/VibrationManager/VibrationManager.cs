@@ -14,6 +14,7 @@ public static class VibrationManager
     private static VibrationEvent _currentEvent = null;
     private static readonly Dictionary<VibrationPriority, LinkedList<VibrationEvent>> EventLists = new();
     private static float _currentStrength = 0f;
+    private static short _ensureNoVibrationsCounter = 0;
     private static readonly object CurrentStrengthLock = new();
     private static readonly object EventCheckerLock = new();
 
@@ -115,7 +116,7 @@ public static class VibrationManager
     public static void Halt()
     {
         ClearAllEvents();
-        StopVibratingAllDevices();
+        Task.Run(async () => await StopVibratingAllDevices());
     }
 
     /// <summary>
@@ -247,6 +248,7 @@ public static class VibrationManager
 
         if (eventFound)
         {
+            _ensureNoVibrationsCounter = 0;
             await VibrateAllDevices(_currentEvent);
             return;
         }
@@ -258,7 +260,7 @@ public static class VibrationManager
 
         if (_currentEvent == null || _currentEvent.HasPassed())
         {
-            StopVibratingAllDevices();
+            await StopVibratingAllDevices();
         }
 
 
@@ -346,7 +348,7 @@ public static class VibrationManager
     /// <summary>
     /// A helper function to handle resetting the vibration manager and setting all toys to 0 strength
     /// </summary>
-    private static void StopVibratingAllDevices()
+    private static async Task StopVibratingAllDevices()
     {
         lock (CurrentStrengthLock)
         {
@@ -361,6 +363,25 @@ public static class VibrationManager
             }
 
             TryVibrateAllDevices(0);
+            _ensureNoVibrationsCounter++;
+        }
+
+        // Potential fix for plugs vibrating after being told to stop?
+        // https://github.com/MysticMia/Viberaria/issues/4
+        if (_ensureNoVibrationsCounter < 3)
+        {
+            // Clear vibrations for 3 times after it is supposed to have been set to 0.
+            // This is to ensure Intiface actually sends through the signal for plugs to stop.
+            await Task.Delay(100);
+            if (_currentStrength == 0 &&
+                (_currentEvent == null || _currentEvent.HasPassed()))
+            {
+                // Clear vibrations while no vibrations are currently being played,
+                // and the strength should already be zero.
+                if (Instance.Debug.Enabled && Instance.Debug.ToyStrengthMessages)
+                    tChat.LogToPlayer("Resending vibration halt signal (3x)", Color.Lime);
+                await StopVibratingAllDevices();
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ public static class tUpdateChecker
             var url = "https://api.github.com/repos/notasuka/Viberaria/releases/latest";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("User-Agent", "Viberaria-Mod");
-            
+
             var response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
@@ -40,7 +40,7 @@ public static class tUpdateChecker
             return null;
         }
     }
-    
+
     private static bool IsNewerVersion(string v1, string v2)
     {
         var a = Array.ConvertAll(v1.Split('.'), int.Parse);

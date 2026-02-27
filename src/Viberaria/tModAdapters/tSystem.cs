@@ -3,20 +3,19 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
+using static Viberaria.VibrationManager.VibrationManager;
 
-using static Viberaria.bVibration;
-
-namespace Viberaria;
+namespace Viberaria.tModAdapters;
 
 class ConfigUI : UIState
 {
-    
+
 }
 
 public class tSystem : ModSystem
 {
-    public static tSystem tSys;
-    
+    public static tSystem Sys;
+
     public bool WorldLoaded = false;
 
     public override void OnWorldUnload()
@@ -26,9 +25,7 @@ public class tSystem : ModSystem
     }
 
     public override void OnWorldLoad()
-    {
-        WorldLoaded = true;
-    }
+        => WorldLoaded = true;
 
     internal UserInterface _configInterface;
     internal ConfigUI _configUi;
@@ -75,6 +72,7 @@ public class tSystem : ModSystem
 
     public override void Load()
     {
+        Sys = this;
         if (!Main.dedServ)
         {
             _configInterface = new UserInterface();

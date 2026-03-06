@@ -49,16 +49,16 @@ jobs:
 
           if (-not $newVersion) {
               Write-Host "No version line matched; skipping bump."
-              echo "bumped=false" >> $GITHUB_OUTPUT
+              Add-Content -Path $env:GITHUB_OUTPUT -Value "bumped=false"
+              Add-Content -Path $env:GITHUB_OUTPUT -Value "version="
               exit 0
           }
 
           $updatedLines | Set-Content $buildTxt
 
-          echo "New version: $newVersion"
-          echo "version=$newVersion" >> $GITHUB_OUTPUT
-          echo "VERSION=$newVersion" >> $GITHUB_ENV
-          echo "bumped=true" >> $GITHUB_OUTPUT
+          Write-Host "New version: $newVersion"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$newVersion"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "bumped=true"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -75,6 +75,12 @@ jobs:
           } else {
               Write-Host "Tag already exists: $tag"
           }
+
+      - name: Verify version output
+        shell: bash
+        run: |
+          echo "bumped=${{ steps.bump.outputs.bumped }}"
+          echo "version=${{ steps.bump.outputs.version }}"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3

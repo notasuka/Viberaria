@@ -15,6 +15,8 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -51,7 +53,6 @@ jobs:
               exit 0
           }
 
-          # Write bumped file
           $updatedLines | Set-Content $buildTxt
 
           echo "New version: $newVersion"
@@ -59,18 +60,21 @@ jobs:
           echo "VERSION=$newVersion" >> $GITHUB_ENV
           echo "bumped=true" >> $GITHUB_OUTPUT
 
-          # Tag
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          $tag = "v$newVersion"
 
+          # Commit the bumped build.txt BEFORE tagging
+          git add "${{ env.BUILD_TXT }}"
+          git commit -m "chore: bump version to $newVersion [skip ci]"
+          git push origin HEAD:master
+
+          $tag = "v$newVersion"
           if (-not (git tag --list $tag)) {
               git tag -a $tag -m "Release $tag"
+              git push origin $tag
           } else {
               Write-Host "Tag already exists: $tag"
           }
-
-          git push origin $tag
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -78,10 +82,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Download tModLoader
-        run: |
-          curl -s -L https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip -o tModLoader.zip
+        run: curl -s -L https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip -o tModLoader.zip
 
       - name: Extract tModLoader
+        shell: bash
         run: |
           unzip -q -o tModLoader.zip -d ../tModLoader
           rm tModLoader.zip
@@ -89,7 +93,7 @@ jobs:
       - name: Create tModLoader.targets file
         shell: bash
         run: |
-          cat >> ../tModLoader.targets << EOF
+          cat >> ../tModLoader.targets << 'EOF'
           <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
             <Import Project="tModLoader/tMLMod.targets" />
           </Project>
@@ -113,27 +117,17 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: artifacts
           path: release-artifact
 
-      - name: Get Mod Version
-        id: modversion
-        run: |
-          VERSION=$(grep '^version' src/Viberaria/build.txt | cut -d= -f2 | xargs)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Detected version: $VERSION"
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ env.VERSION }}
-          name: Release v${{ env.VERSION }}
+          tag_name: v${{ needs.build.outputs.version }}
+          name: Release v${{ needs.build.outputs.version }}
           files: release-artifact/*.tmod
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
